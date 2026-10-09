@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NutriVision AI Pro - Suivi Nutritionnel Mobile & IA Intelligente</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Styles -->
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body class="dark-theme">
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="app" class="app-container">
+    
+    <!-- Top Navigation Header (Mobile Native Style) -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+          </div>
+          <div class="logo-text-wrap">
+            <span class="logo-text">NutriVision <span class="badge-ai">PRO</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="date-navigator">
+          <button id="btn-prev-day" class="btn-icon-sm" title="Jour précédent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <span id="current-date-display" class="date-label">Aujourd'hui</span>
+          <button id="btn-next-day" class="btn-icon-sm" title="Jour suivant">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Reset Journal to 0 Button -->
+        <button id="btn-reset-journal-header" class="btn btn-sm btn-outline text-xs" title="Réinitialiser le journal à 0">
+          <span>🔄 Vider à 0</span>
+        </button>
+
+        <!-- Phone QR Code Button -->
+        <button id="btn-open-qr-mobile" class="btn btn-sm btn-outline hide-mobile" title="Ouvrir sur mon Téléphone">
+          <span>📱 Mobile QR</span>
+        </button>
+
+        <!-- Voice / Smart Text Assistant Button -->
+        <button id="btn-open-voice-ai" class="btn btn-sm btn-sparkle" title="Dictée Vocal & Prompt IA">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          <span class="hide-mobile">Dictée IA</span>
+        </button>
+
+        <button id="btn-open-profile" class="profile-chip" title="Profil & Objectifs">
+          <div class="profile-avatar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span id="header-user-target" class="profile-target">2,065 kcal</span>
+        </button>
+
+        <button id="btn-open-settings" class="btn-icon-sm hide-mobile" title="Paramètres IA">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout Wrapper (Sidebar + Main View) -->
+    <div class="layout-body">
+      
+      <!-- Desktop Sidebar -->
+      <aside class="desktop-sidebar">
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-view="journal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            <span>Journal du jour</span>
+          </button>
+          
+          <button class="nav-item scanner-trigger" id="btn-sidebar-scan">
+            <div class="scan-glow-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <span>Analyseur IA Photo</span>
+          </button>
+
+          <button class="nav-item" data-view="stats">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Statistiques Dynamiques</span>
+          </button>
+
+          <button class="nav-item" data-view="profile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+            <span>BMR, TDEE & BodyFat</span>
+          </button>
+        </nav>
+
+        <!-- Sidebar Water Tracker Widget -->
+        <div class="sidebar-widget card-glass water-widget">
+          <div class="water-header">
+            <div class="water-icon">💧</div>
+            <div>
+              <h3>Suivi d'Hydratation</h3>
+              <span id="sidebar-water-text" class="text-xs text-muted">1,500 / 2,500 ml</span>
+            </div>
+          </div>
+          <div class="water-bottle-container mt-2">
+            <div id="water-wave-fill" class="water-wave-fill" style="height: 60%;"></div>
+          </div>
+          <div class="water-actions mt-3">
+            <button class="btn btn-sm btn-outline btn-add-water" data-amount="250">+ 250ml</button>
+            <button class="btn btn-sm btn-outline btn-add-water" data-amount="500">+ 500ml</button>
+          </div>
+        </div>
+
+        <!-- Sidebar Mobile QR Card -->
+        <div class="sidebar-widget card-glass qr-widget" id="btn-sidebar-qr-card" style="cursor: pointer;">
+          <div class="flex items-center gap-2">
+            <span style="font-size: 1.4rem;">📱</span>
+            <div>
+              <h4 style="font-size: 0.88rem;">Utiliser sur Smartphone</h4>
+              <p class="text-xs text-muted">Scannez le QR Code pour ouvrir</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Summary Widget -->
+        <div class="sidebar-widget card-glass">
+          <h3>Formule Mifflin-St Jeor</h3>
+          <p class="text-muted text-xs">Moteur physiologique de précision</p>
+          <div class="sidebar-bmr-info">
+            <div class="bmr-row">
+              <span>BMR (Repos)</span>
+              <strong id="sidebar-bmr-val">1,720 kcal</strong>
+            </div>
+            <div class="bmr-row">
+              <span>TDEE (Actif)</span>
+              <strong id="sidebar-tdee-val">2,365 kcal</strong>
+            </div>
+            <div class="bmr-row highlight">
+              <span>Cible Quotidienne</span>
+              <strong id="sidebar-target-val">2,065 kcal</strong>
+            </div>
+          </div>
+          <button id="btn-recalc-sidebar" class="btn btn-outline btn-block text-xs mt-3">
+            Ajuster mon profil
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content View Area -->
+      <main class="main-content">
+        
+        <!-- VIEW 1: JOURNAL (DEFAULT) -->
+        <section id="view-journal" class="view-section active">
+          
+          <!-- Daily Summary Card -->
+          <div class="summary-hero card-glass">
+            <div class="hero-header">
+              <div>
+                <h2 class="title-lg">Tableau de Bord Nutritionnel</h2>
+                <p class="subtitle">Objectif : <span id="summary-target-text">2,065 kcal</span> &bull; Score : <span id="daily-score-badge" class="badge-score score-a">NutriScore A</span></p>
+              </div>
+              <div class="hero-actions-row flex gap-2">
+                <button id="btn-reset-journal-hero" class="btn btn-sm btn-outline" title="Réinitialiser à 0 kcal">
+                  <span>🔄 Vider à 0</span>
+                </button>
+                <button id="btn-quick-scan-hero" class="btn btn-primary btn-sparkle">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <span>Analyse Repas IA Photo</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="calorie-overview-grid">
+              <!-- Calorie Gauge Circle -->
+              <div class="gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 160 160">
+                  <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="hsl(158, 82%, 46%)" />
+                      <stop offset="100%" stop-color="hsl(188, 94%, 48%)" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="gauge-bg" cx="80" cy="80" r="68"></circle>
+                  <circle id="gauge-progress" class="gauge-fill" cx="80" cy="80" r="68" stroke-dasharray="427" stroke-dashoffset="427"></circle>
+                </svg>
+                <div class="gauge-content">
+                  <span id="val-remaining-cals" class="gauge-val">2,065</span>
+                  <span class="gauge-unit">kcal restantes</span>
+                </div>
+              </div>
+
+              <!-- Calorie Math breakdown -->
+              <div class="calorie-math">
+                <div class="math-item">
+                  <span class="math-label">Objectif Cible</span>
+                  <span id="math-target" class="math-val">2,065</span>
+                </div>
+                <div class="math-operator">-</div>
+                <div class="math-item">
+                  <span class="math-label">Consommé</span>
+                  <span id="math-eaten" class="math-val consumed">0</span>
+                </div>
+                <div class="math-operator">=</div>
+                <div class="math-item highlight">
+                  <span class="math-label">Solde Restant</span>
+                  <span id="math-remaining" class="math-val remaining">2,065</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Macros Progress Bars Grid -->
+            <div class="macros-grid">
+              <!-- Protein -->
+              <div class="macro-card protein">
+                <div class="macro-header">
+                  <span class="macro-name">Protéines</span>
+                  <span class="macro-stats"><strong id="val-prot-eaten">0</strong> / <span id="val-prot-target">150</span>g</span>
+                </div>
+                <div class="progress-track">
+                  <div id="bar-prot" class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <span id="pct-prot" class="macro-pct">0% atteint</span>
+              </div>
+
+              <!-- Carbs -->
+              <div class="macro-card carbs">
+                <div class="macro-header">
+                  <span class="macro-name">Glucides</span>
+                  <span class="macro-stats"><strong id="val-carb-eaten">0</strong> / <span id="val-carb-target">232</span>g</span>
+                </div>
+                <div class="progress-track">
+                  <div id="bar-carb" class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <span id="pct-carb" class="macro-pct">0% atteint</span>
+              </div>
+
+              <!-- Fat -->
+              <div class="macro-card fat">
+                <div class="macro-header">
+                  <span class="macro-name">Lipides</span>
+                  <span class="macro-stats"><strong id="val-fat-eaten">0</strong> / <span id="val-fat-target">57</span>g</span>
+                </div>
+                <div class="progress-track">
+                  <div id="bar-fat" class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <span id="pct-fat" class="macro-pct">0% atteint</span>
+              </div>
+
+              <!-- Fiber -->
+              <div class="macro-card fiber">
+                <div class="macro-header">
+                  <span class="macro-name">Fibres</span>
+                  <span class="macro-stats"><strong id="val-fib-eaten">0</strong> / <span id="val-fib-target">30</span>g</span>
+                </div>
+                <div class="progress-track">
+                  <div id="bar-fib" class="progress-bar" style="width: 0%;"></div>
+                </div>
+                <span id="pct-fib" class="macro-pct">0% atteint</span>
+              </div>
+            </div>
+
+            <!-- Micro-Nutrients Collapsible Accordion -->
+            <div class="micro-nutrients-row mt-3">
+              <button id="btn-toggle-micros" class="btn btn-sm btn-ghost text-xs">
+                <span>📊 Micronutriments (Sodium, Sucre, Potassium, Fer)</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div id="micros-panel" class="micros-panel hidden">
+                <div class="micros-grid mt-2">
+                  <div class="micro-item"><span>Sucres Rapides</span><strong id="micro-sugar">0g</strong> / max 35g</div>
+                  <div class="micro-item"><span>Sodium</span><strong id="micro-sodium">0mg</strong> / 2,300mg</div>
+                  <div class="micro-item"><span>Potassium</span><strong id="micro-potassium">0mg</strong> / 3,500mg</div>
+                  <div class="micro-item"><span>Fer & Vit C</span><strong id="micro-iron">0mg</strong> / 18mg</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- MEAL LOG SECTIONS (MyFitnessPal Style) -->
+          <div class="meals-container">
+            
+            <!-- Petit Déjeuner -->
+            <div class="meal-block card-glass" data-meal="breakfast">
+              <div class="meal-block-header">
+                <div class="meal-title-wrap">
+                  <div class="meal-icon breakfast-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                  </div>
+                  <div>
+                    <h3>Petit-Déjeuner</h3>
+                    <span class="meal-subtotal" id="subtotal-breakfast">0 kcal</span>
+                  </div>
+                </div>
+                <div class="meal-actions">
+                  <button class="btn btn-sm btn-outline btn-scan-meal" data-meal="breakfast">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Scanner IA</span>
+                  </button>
+                  <button class="btn btn-sm btn-ghost btn-add-manual" data-meal="breakfast">+ Manuel</button>
+                </div>
+              </div>
+              <div class="meal-items-list" id="items-breakfast">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Déjeuner -->
+            <div class="meal-block card-glass" data-meal="lunch">
+              <div class="meal-block-header">
+                <div class="meal-title-wrap">
+                  <div class="meal-icon lunch-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </div>
+                  <div>
+                    <h3>Déjeuner</h3>
+                    <span class="meal-subtotal" id="subtotal-lunch">0 kcal</span>
+                  </div>
+                </div>
+                <div class="meal-actions">
+                  <button class="btn btn-sm btn-outline btn-scan-meal" data-meal="lunch">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Scanner IA</span>
+                  </button>
+                  <button class="btn btn-sm btn-ghost btn-add-manual" data-meal="lunch">+ Manuel</button>
+                </div>
+              </div>
+              <div class="meal-items-list" id="items-lunch">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Dîner -->
+            <div class="meal-block card-glass" data-meal="dinner">
+              <div class="meal-block-header">
+                <div class="meal-title-wrap">
+                  <div class="meal-icon dinner-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                  </div>
+                  <div>
+                    <h3>Dîner</h3>
+                    <span class="meal-subtotal" id="subtotal-dinner">0 kcal</span>
+                  </div>
+                </div>
+                <div class="meal-actions">
+                  <button class="btn btn-sm btn-outline btn-scan-meal" data-meal="dinner">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Scanner IA</span>
+                  </button>
+                  <button class="btn btn-sm btn-ghost btn-add-manual" data-meal="dinner">+ Manuel</button>
+                </div>
+              </div>
+              <div class="meal-items-list" id="items-dinner">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Collations / Snacks -->
+            <div class="meal-block card-glass" data-meal="snack">
+              <div class="meal-block-header">
+                <div class="meal-title-wrap">
+                  <div class="meal-icon snack-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  </div>
+                  <div>
+                    <h3>Collations & Snacks</h3>
+                    <span class="meal-subtotal" id="subtotal-snack">0 kcal</span>
+                  </div>
+                </div>
+                <div class="meal-actions">
+                  <button class="btn btn-sm btn-outline btn-scan-meal" data-meal="snack">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Scanner IA</span>
+                  </button>
+                  <button class="btn btn-sm btn-ghost btn-add-manual" data-meal="snack">+ Manuel</button>
+                </div>
+              </div>
+              <div class="meal-items-list" id="items-snack">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- VIEW 2: STATISTIQUES & EVOLUTION DYNAMIQUE -->
+        <section id="view-stats" class="view-section">
+          <div class="section-title-wrap">
+            <h2>Statistiques & Évolution Dynamique</h2>
+            <p class="text-muted">Visualisez vos apports réels enregistrés et l'évolution de votre poids</p>
+          </div>
+
+          <!-- Weight Log Input Box -->
+          <div class="card-glass weight-log-card mb-4 mt-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3>Suivi de Poids Quotidien</h3>
+                <p class="text-xs text-muted">Enregistrez votre poids aujourd'hui pour tracer la courbe d'évolution</p>
+              </div>
+              <form id="form-log-weight" class="flex gap-2 items-center">
+                <input type="number" step="0.1" id="input-daily-weight" class="form-input text-xs" style="width: 100px;" placeholder="ex: 74.5" required />
+                <span class="text-xs">kg</span>
+                <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="card-glass chart-card">
+              <h3>Apport Calorique Réel (7 Derniers Jours)</h3>
+              <p class="text-xs text-muted">Barres vertes = jours enregistrés. Ligne pointillée = Cible Target.</p>
+              <div class="canvas-holder">
+                <canvas id="calories-chart"></canvas>
+              </div>
+            </div>
+
+            <div class="card-glass chart-card">
+              <h3>Répartition Réelle des Macros (%)</h3>
+              <p class="text-xs text-muted">Pourcentage de vos Protéines, Glucides et Lipides consommés</p>
+              <div class="canvas-holder">
+                <canvas id="macros-pie-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: PROFILE & BMR / BODY FAT CALCULATOR -->
+        <section id="view-profile" class="view-section">
+          <div class="section-title-wrap">
+            <h2>Moteur PHYSIO-AI & Composition Corporelle</h2>
+            <p class="text-muted">Formules scientifiques de Mifflin-St Jeor & Formule US Navy Body Fat</p>
+          </div>
+
+          <div class="profile-calculator-grid">
+            <!-- Form Card -->
+            <div class="card-glass form-card">
+              <form id="bmr-form">
+                <h3 class="mb-3">Mesures Physiques & Objectif</h3>
+
+                <div class="form-row duo">
+                  <div class="form-group">
+                    <label for="input-gender">Genre</label>
+                    <select id="input-gender" class="form-input">
+                      <option value="male">Homme</option>
+                      <option value="female">Femme</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="input-age">Âge (années)</label>
+                    <input type="number" id="input-age" class="form-input" value="28" min="15" max="100" required />
+                  </div>
+                </div>
+
+                <div class="form-row duo">
+                  <div class="form-group">
+                    <label for="input-weight">Poids actuel (kg)</label>
+                    <input type="number" step="0.5" id="input-weight" class="form-input" value="75" min="30" max="250" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="input-height">Taille (cm)</label>
+                    <input type="number" id="input-height" class="form-input" value="178" min="100" max="230" required />
+                  </div>
+                </div>
+
+                <div class="form-row duo">
+                  <div class="form-group">
+                    <label for="input-neck">Tour de cou (cm)</label>
+                    <input type="number" id="input-neck" class="form-input" value="38" min="20" max="60" />
+                  </div>
+                  <div class="form-group">
+                    <label for="input-waist">Tour de taille (cm)</label>
+                    <input type="number" id="input-waist" class="form-input" value="82" min="40" max="150" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="input-activity">Niveau d'activité physique (PAL)</label>
+                  <select id="input-activity" class="form-input">
+                    <option value="1.2">Sédentaire (Bureau, peu d'exercice)</option>
+                    <option value="1.375" selected>Légèrement actif (Sport léger 1-3j/semaine)</option>
+                    <option value="1.55">Modérément actif (Sport modéré 3-5j/semaine)</option>
+                    <option value="1.725">Très actif (Sport intense 6-7j/semaine)</option>
+                    <option value="1.9">Extrêmement actif (Athlète / Métier physique)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="input-goal">Objectif Physiologique</label>
+                  <select id="input-goal" class="form-input">
+                    <option value="deficit_fast">Perte de gras rapide (-500 kcal)</option>
+                    <option value="deficit_moderate" selected>Perte de gras modérée (-300 kcal)</option>
+                    <option value="maintenance">Maintien du poids actuel (0 kcal)</option>
+                    <option value="surplus_clean">Prise de masse sèche (+300 kcal)</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg mt-3">
+                  Recalculer mes Objectifs & Body Fat
+                </button>
+              </form>
+            </div>
+
+            <!-- Scientific Results Card -->
+            <div class="card-glass bmr-results-card">
+              <div class="results-badge">Formule Mifflin-St Jeor & US Navy</div>
+              <h3>Résultats de Composition Corporelle</h3>
+
+              <div class="metric-result-box">
+                <div class="metric-single">
+                  <span class="metric-title">BMR (Métabolisme de Base)</span>
+                  <span id="res-bmr" class="metric-value">1,720 kcal</span>
+                  <span class="metric-desc">Calories brûlées au repos biologique total</span>
+                </div>
+
+                <div class="metric-single">
+                  <span class="metric-title">TDEE (Dépense Totale Journalière)</span>
+                  <span id="res-tdee" class="metric-value">2,365 kcal</span>
+                  <span class="metric-desc">Calories nécessaires au maintien stabilisé</span>
+                </div>
+
+                <div class="metric-single highlight-box">
+                  <span class="metric-title">Cible Calorique Quotidienne</span>
+                  <span id="res-target" class="metric-value target">2,065 kcal</span>
+                  <span class="metric-desc">Cible optimale pour votre objectif</span>
+                </div>
+
+                <div class="metric-single">
+                  <span class="metric-title">Taux de Masse Grasse Estimé (US Navy)</span>
+                  <span id="res-bodyfat" class="metric-value" style="color: var(--cyan-accent);">15.2%</span>
+                  <span class="metric-desc">Masse sèche estimée : 63.6 kg</span>
+                </div>
+              </div>
+
+              <h4 class="mt-4 mb-2">Répartition recommandée des Macros</h4>
+              <div class="macro-breakdown-pills">
+                <div class="pill prot">
+                  <span>Protéines</span>
+                  <strong id="res-prot-g">150g</strong>
+                  <small>(30%)</small>
+                </div>
+                <div class="pill carb">
+                  <span>Glucides</span>
+                  <strong id="res-carb-g">232g</strong>
+                  <small>(45%)</small>
+                </div>
+                <div class="pill fat">
+                  <span>Lipides</span>
+                  <strong id="res-fat-g">57g</strong>
+                  <small>(25%)</small>
+                </div>
+                <div class="pill fib">
+                  <span>Fibres</span>
+                  <strong id="res-fib-g">30g</strong>
+                  <small>Cible</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="mobile-bottom-nav">
+      <button class="mobile-nav-btn active" data-view="journal">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+        <span>Journal</span>
+      </button>
+
+      <button class="mobile-nav-btn fab-scan" id="btn-mobile-scan">
+        <div class="fab-circle">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <span>Scanner IA</span>
+      </button>
+
+      <button class="mobile-nav-btn" data-view="stats">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Stats</span>
+      </button>
+
+      <button class="mobile-nav-btn" data-view="profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
+        <span>Profil BMR</span>
+      </button>
+    </nav>
+
+    <!-- MODAL: MOBILE CONNECT QR CODE -->
+    <div id="modal-qr-mobile" class="modal-overlay">
+      <div class="modal-container modal-sm card-glass">
+        <div class="modal-header">
+          <h3 class="modal-title">📱 Connecter votre Smartphone</h3>
+          <button class="btn-close-modal">&times;</button>
+        </div>
+        <div class="modal-body text-center">
+          <p class="text-xs text-muted mb-3">
+            Assurez-vous que votre téléphone est connecté au <strong>même réseau Wi-Fi</strong> que votre PC.
+          </p>
+
+          <div class="qr-code-box p-3 mb-3" style="background: #fff; border-radius: 12px; display: inline-block;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=http://192.168.1.18:3000" alt="QR Code Adresse Mobile" style="width: 180px; height: 180px; display: block;" />
+          </div>
+
+          <p class="text-xs mb-2">Ou tapez l'adresse suivante dans le navigateur de votre téléphone :</p>
+          <div class="url-copy-box" style="background: var(--bg-elevated); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--emerald-primary); font-family: var(--font-mono); font-weight: 700; color: var(--emerald-primary);">
+            http://192.168.1.18:3000
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 1: AI MEAL PHOTO SCANNER & PORTION ADJUSTER WITH BOUNDING BOX OVERLAYS -->
+    <div id="modal-scanner" class="modal-overlay">
+      <div class="modal-container modal-lg card-glass">
+        <div class="modal-header">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <div>
+              <h3 class="modal-title">Analyseur de Repas par IA Vision</h3>
+              <p class="modal-subtitle">Détection multi-objets et calcul de portions en temps réel</p>
+            </div>
+          </div>
+          <button class="btn-close-modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          
+          <!-- STEP A: UPLOAD / CAMERA SELECTION -->
+          <div id="scan-step-upload" class="scan-step active">
+            <div class="camera-upload-tabs">
+              <button id="tab-upload-file" class="tab-btn active">Charger une Photo</button>
+              <button id="tab-camera-live" class="tab-btn">Appareil Photo (Live)</button>
+              <button id="tab-presets" class="tab-btn">Plats Exemples</button>
+            </div>
+
+            <!-- Upload drop zone -->
+            <div id="pane-upload-file" class="tab-pane active">
+              <div class="dropzone" id="dropzone-area">
+                <input type="file" id="input-file-meal" accept="image/*" class="file-input-hidden" />
+                <div class="dropzone-content">
+                  <div class="dropzone-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </div>
+                  <h4>Glissez une photo de votre repas ici</h4>
+                  <p class="text-muted text-xs">ou cliquez pour parcourir les fichiers (JPG, PNG, WEBP)</p>
+                  <button class="btn btn-primary btn-sm mt-3" onclick="document.getElementById('input-file-meal').click()">
+                    Sélectionner une photo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Camera stream pane -->
+            <div id="pane-camera-live" class="tab-pane">
+              <div class="camera-stream-wrapper">
+                <video id="webcam-video" autoplay playsinline class="webcam-preview"></video>
+                <div class="camera-overlay-grid"></div>
+                <div class="camera-controls">
+                  <button id="btn-capture-photo" class="btn-shutter" title="Prendre la photo">
+                    <div class="shutter-inner"></div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sample Presets pane -->
+            <div id="pane-presets" class="tab-pane">
+              <p class="text-xs text-muted mb-3">Sélectionnez un plat exemple pour tester l'analyse multimodale IA :</p>
+              <div class="preset-grid">
+                <button class="preset-card" data-preset="salmon">
+                  <div class="preset-img-placeholder saumon-bg">🥗</div>
+                  <span>Saumon, Quinoa & Avocat</span>
+                  <small>~ 580 kcal</small>
+                </button>
+
+                <button class="preset-card" data-preset="chicken">
+                  <div class="preset-img-placeholder poulet-bg">🍗</div>
+                  <span>Poulet Grillé & Riz Basmati</span>
+                  <small>~ 520 kcal</small>
+                </button>
+
+                <button class="preset-card" data-preset="omelette">
+                  <div class="preset-img-placeholder omelette-bg">🍳</div>
+                  <span>Omelette Légumes & Pain</span>
+                  <small>~ 390 kcal</small>
+                </button>
+
+                <button class="preset-card" data-preset="burger">
+                  <div class="preset-img-placeholder burger-bg">🍔</div>
+                  <span>Burger Maison & Sweet Fries</span>
+                  <small>~ 720 kcal</small>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP B: AI SCANNING ANIMATION WITH SCI-FI MESH -->
+          <div id="scan-step-analyzing" class="scan-step">
+            <div class="ai-scanning-box">
+              <div class="preview-scanned-img-wrapper">
+                <img id="img-scanned-preview" src="" alt="Aperçu du plat" />
+                <div class="scan-laser-line"></div>
+                <div class="scan-grid-overlay"></div>
+              </div>
+              <div class="ai-scanning-status">
+                <div class="spinner-ai"></div>
+                <h4 id="scan-status-title">Analyse IA Multimodale en cours...</h4>
+                <p id="scan-status-sub" class="text-muted text-xs">Détection d'objets, segmentation des ingrédients & calcul volumétrique...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP C: AI RESULTS & INTERACTIVE PORTION ADJUSTER WITH BOUNDING BOXES -->
+          <div id="scan-step-results" class="scan-step">
+            <div class="results-layout-grid">
+              
+              <!-- Left: Image with Interactive Bounding Boxes Overlay -->
+              <div class="results-left-col">
+                <div class="scanned-image-card" id="scanned-image-box">
+                  <img id="res-final-img" src="" alt="Plat analysé" />
+                  <!-- Bounding boxes layer dynamically drawn by JS -->
+                  <div id="bounding-boxes-layer" class="bounding-boxes-layer"></div>
+
+                  <div class="ai-confidence-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Confiance IA : <strong id="res-ai-confidence">97%</strong></span>
+                  </div>
+                </div>
+
+                <div class="card-glass ai-advice-box">
+                  <div class="flex items-center justify-between mb-1">
+                    <h4>💡 Analyse & Conseil IA</h4>
+                    <span id="meal-nutriscore-badge" class="badge-score score-a">Score A</span>
+                  </div>
+                  <p id="res-ai-advice" class="text-xs">Repas équilibré riche en protéines de haute valeur biologique et fibres rassasiantes.</p>
+                </div>
+              </div>
+
+              <!-- Right: Detailed items & Interactive adjusters -->
+              <div class="results-right-col">
+                <div class="meal-target-selector">
+                  <label for="select-target-meal">Ajouter ce plat à :</label>
+                  <select id="select-target-meal" class="form-input">
+                    <option value="lunch">Déjeuner</option>
+                    <option value="breakfast">Petit-Déjeuner</option>
+                    <option value="dinner">Dîner</option>
+                    <option value="snack">Collation</option>
+                  </select>
+                </div>
+
+                <div class="total-result-banner">
+                  <div>
+                    <span class="text-xs text-muted">Total Calculé</span>
+                    <h3 id="res-total-cals" class="total-cal-display">580 <small>kcal</small></h3>
+                  </div>
+                  <div class="mini-macro-pills">
+                    <span class="m-pill prot">P: <strong id="res-total-prot">42g</strong></span>
+                    <span class="m-pill carb">G: <strong id="res-total-carb">48g</strong></span>
+                    <span class="m-pill fat">L: <strong id="res-total-fat">18g</strong></span>
+                    <span class="m-pill fib">F: <strong id="res-total-fib">8g</strong></span>
+                  </div>
+                </div>
+
+                <h4 class="mt-3 mb-2 flex items-center justify-between">
+                  <span>Aliments Décelés & Portions (Ajustables)</span>
+                  <small class="text-muted text-xs">Modifiez les grammes pour 100% de précision</small>
+                </h4>
+
+                <div id="ai-detected-items-list" class="detected-items-list">
+                  <!-- Dynamically inserted sliders/inputs per food item -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer" id="modal-scanner-footer">
+          <button class="btn btn-outline btn-close-modal">Annuler</button>
+          <button id="btn-save-ai-meal" class="btn btn-primary btn-sparkle hidden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Valider & Ajouter au Journal
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: VOICE & NATURAL LANGUAGE SMART PROMPT IA -->
+    <div id="modal-voice-ai" class="modal-overlay">
+      <div class="modal-container modal-md card-glass">
+        <div class="modal-header">
+          <div class="flex items-center gap-2">
+            <div class="icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </div>
+            <div>
+              <h3 class="modal-title">Dictée Vocal & Assistant IA Texte</h3>
+              <p class="modal-subtitle">Décrivez votre repas en langage naturel (voix ou texte)</p>
+            </div>
+          </div>
+          <button class="btn-close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="voice-mic-box text-center p-4">
+            <button id="btn-start-mic" class="btn-mic-pulse mb-3" title="Activer le microphone">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+            </button>
+            <p id="mic-status-text" class="text-xs text-muted mb-3">Cliquez sur le micro ou tapez ci-dessous votre repas complet</p>
+          </div>
+
+          <div class="form-group">
+            <label for="input-natural-prompt">Description du plat (ex: "150g de riz basmati, 1 blanc de poulet grillé et un demi-avocat")</label>
+            <textarea id="input-natural-prompt" class="form-input" rows="3" placeholder="Tapez ou dictez ce que vous avez mangé..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="select-voice-meal-target">Ajouter à :</label>
+            <select id="select-voice-meal-target" class="form-input">
+              <option value="lunch">Déjeuner</option>
+              <option value="breakfast">Petit-Déjeuner</option>
+              <option value="dinner">Dîner</option>
+              <option value="snack">Collation</option>
+            </select>
+          </div>
+
+          <button id="btn-process-natural-ai" class="btn btn-primary btn-sparkle btn-block mt-3">
+            ✨ Analyser par le Moteur PNL IA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: MANUAL FOOD ADD & SEARCH DATABASE -->
+    <div id="modal-manual-add" class="modal-overlay">
+      <div class="modal-container modal-md card-glass">
+        <div class="modal-header">
+          <h3 class="modal-title">Ajouter un Aliment Manuellement</h3>
+          <button class="btn-close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="search-box mb-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="input-food-search" placeholder="Rechercher (ex: Pomme, Poulet, Avocat, Riz...)" class="form-input search-input" />
+          </div>
+
+          <div id="food-db-results" class="food-db-list">
+            <!-- Dynamically populated from local database search -->
+          </div>
+
+          <div class="divider-text">ou créer une entrée personnalisée</div>
+
+          <form id="form-custom-food">
+            <div class="form-group">
+              <label for="custom-food-name">Nom de l'aliment / plat</label>
+              <input type="text" id="custom-food-name" class="form-input" placeholder="ex: Granola Maison Bio" required />
+            </div>
+            <div class="form-row duo">
+              <div class="form-group">
+                <label for="custom-food-weight">Portion (g)</label>
+                <input type="number" id="custom-food-weight" class="form-input" value="100" required />
+              </div>
+              <div class="form-group">
+                <label for="custom-food-cals">Calories (kcal)</label>
+                <input type="number" id="custom-food-cals" class="form-input" placeholder="250" required />
+              </div>
+            </div>
+            <div class="form-row quad">
+              <div class="form-group">
+                <label for="custom-food-prot">Prot (g)</label>
+                <input type="number" step="0.1" id="custom-food-prot" class="form-input" value="0" />
+              </div>
+              <div class="form-group">
+                <label for="custom-food-carb">Gluc (g)</label>
+                <input type="number" step="0.1" id="custom-food-carb" class="form-input" value="0" />
+              </div>
+              <div class="form-group">
+                <label for="custom-food-fat">Lip (g)</label>
+                <input type="number" step="0.1" id="custom-food-fat" class="form-input" value="0" />
+              </div>
+              <div class="form-group">
+                <label for="custom-food-fib">Fib (g)</label>
+                <input type="number" step="0.1" id="custom-food-fib" class="form-input" value="0" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block mt-3">Ajouter au Repas</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 4: API KEY & SETTINGS MODAL -->
+    <div id="modal-settings" class="modal-overlay">
+      <div class="modal-container modal-sm card-glass">
+        <div class="modal-header">
+          <h3 class="modal-title">Paramètres IA & Application</h3>
+          <button class="btn-close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-xs text-muted mb-3">
+            Par défaut, NutriVision AI PRO intègre son propre moteur d'analyse de vision haute précision. Vous pouvez ajouter votre propre clé API Google Gemini 1.5/2.0 pour une exécution en direct via le cloud Gemini.
+          </p>
+          <div class="form-group">
+            <label for="input-gemini-key">Clé API Gemini (Optionnel)</label>
+            <input type="password" id="input-gemini-key" class="form-input" placeholder="AIzaSy..." />
+          </div>
+          <button id="btn-save-settings" class="btn btn-primary btn-block mt-3">Sauvegarder les paramètres</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- App Main Logic Script -->
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
