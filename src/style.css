@@ -763,6 +763,15 @@ h1, h2, h3, h4, .font-display {
 
 .food-db-list { display: flex; flex-direction: column; gap: 0.4rem; max-height: 170px; overflow-y: auto; }
 .food-db-item { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0.65rem; background: var(--bg-elevated); border-radius: var(--radius-md); cursor: pointer; }
+.barcode-lookup { display: grid; gap: 0.4rem; }
+.barcode-lookup label, .barcode-portion-label { color: var(--text-muted); font-size: 0.75rem; }
+.barcode-lookup-row { display: flex; gap: 0.5rem; }
+.barcode-lookup-row .form-input { min-width: 0; flex: 1; }
+.barcode-lookup-row .btn { flex-shrink: 0; }
+.barcode-product-result { align-items: center; gap: 0.65rem; cursor: default; flex-wrap: wrap; }
+.barcode-product-details { display: grid; gap: 0.2rem; flex: 1 1 100%; }
+.barcode-portion-label { display: grid; gap: 0.2rem; }
+.barcode-portion-input { width: 92px; }
 .divider-text { text-align: center; color: var(--text-subtle); font-size: 0.72rem; margin: 0.85rem 0; position: relative; }
 .divider-text::before, .divider-text::after { content: ''; position: absolute; top: 50%; width: 28%; height: 1px; background: var(--border-glass); }
 .divider-text::before { left: 0; } .divider-text::after { right: 0; }

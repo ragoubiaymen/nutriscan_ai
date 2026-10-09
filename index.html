@@ -859,6 +859,15 @@
             <input type="text" id="input-food-search" placeholder="Rechercher (ex: Pomme, Poulet, Avocat, Riz...)" class="form-input search-input" />
           </div>
 
+          <div class="barcode-lookup mb-3">
+            <label for="input-food-barcode">Produit emballé : code-barres</label>
+            <div class="barcode-lookup-row">
+              <input type="text" id="input-food-barcode" class="form-input" inputmode="numeric" autocomplete="off" placeholder="Ex. 619..." aria-describedby="barcode-lookup-status" />
+              <button type="button" id="btn-lookup-barcode" class="btn btn-outline">Rechercher</button>
+            </div>
+            <p id="barcode-lookup-status" class="text-xs text-muted" role="status" aria-live="polite">Données produits fournies par Open Food Facts ; vérifiez l’étiquette.</p>
+          </div>
+
           <div id="food-db-results" class="food-db-list">
             <!-- Dynamically populated from local database search -->
           </div>

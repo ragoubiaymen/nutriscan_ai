@@ -1261,28 +1261,11 @@ function initVoiceAI() {
 
 function parseNaturalTextMeal(textPrompt) {
   const targetMeal = document.getElementById('select-voice-meal-target').value;
-
-  const parsedItem = {
-    id: Date.now().toString(),
-    name: textPrompt.length > 30 ? textPrompt.substring(0, 30) + '...' : textPrompt,
-    weight: 250,
-    cals: 480,
-    prot: 35,
-    carb: 45,
-    fat: 14,
-    fib: 6,
-    thumb: '🎙️'
-  };
-
-  const today = state.selectedDateStr;
-  if (!state.meals[today]) {
-    state.meals[today] = { breakfast: [], lunch: [], dinner: [], snack: [] };
-  }
-
-  state.meals[today][targetMeal].push(parsedItem);
-  saveMeals();
+  state.selectedMealTarget = targetMeal;
   closeAllModals();
-  showToast(`Repas "${parsedItem.name}" analysé et ajouté ! ✨`);
+  openManualAddModal(targetMeal);
+  document.getElementById('custom-food-name').value = textPrompt;
+  showToast('Description reprise. Vérifiez les ingrédients, le poids et les valeurs avant de valider.');
 }
 
 // MANUAL FOOD DB SEARCH ENGINE
@@ -1299,6 +1282,8 @@ function initFoodSearch() {
     const filtered = FOOD_DATABASE.filter(f => f.name.toLowerCase().includes(q));
     renderFoodDBList(filtered);
   });
+
+  document.getElementById('btn-lookup-barcode').addEventListener('click', lookupFoodBarcode);
 
   const customForm = document.getElementById('form-custom-food');
   customForm.addEventListener('submit', (e) => {
@@ -1319,6 +1304,98 @@ function initFoodSearch() {
     closeAllModals();
     customForm.reset();
   });
+}
+
+async function lookupFoodBarcode() {
+  const barcodeInput = document.getElementById('input-food-barcode');
+  const status = document.getElementById('barcode-lookup-status');
+  const button = document.getElementById('btn-lookup-barcode');
+  const barcode = barcodeInput.value.replace(/\s/g, '');
+
+  if (!/^\d{8,14}$/.test(barcode)) {
+    status.textContent = 'Entrez un code-barres valide de 8 à 14 chiffres.';
+    return;
+  }
+
+  button.disabled = true;
+  status.textContent = 'Recherche du produit...';
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=status,product_name,product_name_fr,brands,nutriments`);
+    if (!response.ok) throw new Error('Service produit momentanément indisponible. Réessayez.');
+
+    const result = await response.json();
+    const product = result.product;
+    if (result.status !== 1 || !product) {
+      throw new Error('Produit non trouvé. Vérifiez le code ou utilisez les valeurs de son étiquette.');
+    }
+
+    const nutrition = product.nutriments || {};
+    const readNutrient = value => value !== undefined && value !== null && value !== '' ? Number(value) : NaN;
+    const kcalValue = readNutrient(nutrition['energy-kcal_100g']);
+    const energyKj = readNutrient(nutrition.energy_100g);
+    const nutrients = {
+      cals: Number.isFinite(kcalValue) ? kcalValue : energyKj / 4.184,
+      prot: readNutrient(nutrition.proteins_100g),
+      carb: readNutrient(nutrition.carbohydrates_100g),
+      fat: readNutrient(nutrition.fat_100g),
+      fib: readNutrient(nutrition.fiber_100g)
+    };
+
+    if (!Number.isFinite(nutrients.cals) || !['prot', 'carb', 'fat', 'fib'].every(key => Number.isFinite(nutrients[key]))) {
+      throw new Error('Les valeurs nutritionnelles sont incomplètes. Vérifiez l’étiquette et saisissez-les manuellement.');
+    }
+
+    const name = [product.product_name_fr || product.product_name, product.brands].filter(Boolean).join(' - ');
+    renderBarcodeProduct({ name: name || `Produit ${barcode}`, ...nutrients });
+    status.textContent = 'Produit trouvé. Entrez la quantité consommée et vérifiez les valeurs avec l’étiquette.';
+  } catch (error) {
+    status.textContent = error.message || 'Impossible de rechercher ce produit.';
+    document.getElementById('barcode-product-result')?.remove();
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function renderBarcodeProduct(product) {
+  document.getElementById('barcode-product-result')?.remove();
+  const container = document.getElementById('food-db-results');
+  const card = document.createElement('div');
+  card.id = 'barcode-product-result';
+  card.className = 'food-db-item barcode-product-result';
+  card.innerHTML = `
+    <div class="barcode-product-details">
+      <strong>${escapeHtml(product.name)}</strong>
+      <span class="text-xs text-muted">pour 100 g · ${Math.round(product.cals)} kcal · P ${product.prot} g · G ${product.carb} g · L ${product.fat} g</span>
+    </div>
+    <label class="barcode-portion-label">Quantité (g)
+      <input class="form-input barcode-portion-input" type="number" min="1" max="5000" step="1" value="100" inputmode="decimal" />
+    </label>
+    <button type="button" class="btn btn-sm btn-primary">Ajouter</button>
+  `;
+
+  card.querySelector('button').addEventListener('click', () => {
+    const grams = Number(card.querySelector('.barcode-portion-input').value);
+    if (!Number.isFinite(grams) || grams < 1 || grams > 5000) {
+      document.getElementById('barcode-lookup-status').textContent = 'La quantité doit être comprise entre 1 et 5000 g.';
+      return;
+    }
+
+    const factor = grams / 100;
+    addFoodItemToMeal({
+      id: Date.now().toString(),
+      name: product.name,
+      weight: grams,
+      cals: Math.round(product.cals * factor),
+      prot: Math.round(product.prot * factor * 10) / 10,
+      carb: Math.round(product.carb * factor * 10) / 10,
+      fat: Math.round(product.fat * factor * 10) / 10,
+      fib: Math.round(product.fib * factor * 10) / 10,
+      thumb: '🏷️'
+    });
+    closeAllModals();
+  });
+
+  container.prepend(card);
 }
 
 function renderFoodDBList(items) {
