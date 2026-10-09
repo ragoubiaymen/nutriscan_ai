@@ -628,17 +628,21 @@ h1, h2, h3, h4, .font-display {
 
 .camera-stream-wrapper {
   position: relative;
-  width: 100%;
-  height: 240px;
+  width: min(100%, 420px);
+  aspect-ratio: 1;
+  height: auto;
   background: #000;
   border-radius: var(--radius-lg);
   overflow: hidden;
+  margin-inline: auto;
 }
 
 .webcam-preview { width: 100%; height: 100%; object-fit: cover; }
 .camera-controls { position: absolute; bottom: 0.75rem; left: 0; width: 100%; display: flex; justify-content: center; }
 .btn-shutter { width: 52px; height: 52px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); border: 3px solid #fff; padding: 3px; cursor: pointer; }
+.btn-shutter:disabled { opacity: 0.45; cursor: not-allowed; }
 .shutter-inner { width: 100%; height: 100%; border-radius: 50%; background: #fff; }
+.camera-status { min-height: 1.25rem; margin: 0.65rem auto 0; max-width: 420px; color: var(--text-muted); font-size: 0.75rem; text-align: center; }
 
 .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; }
 .preset-card { background: var(--bg-elevated); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 0.75rem; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; cursor: pointer; color: var(--text-main); }
@@ -672,15 +676,16 @@ h1, h2, h3, h4, .font-display {
 
 .scanned-image-card {
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  height: 160px;
-  max-height: 25vh;
+  width: min(100%, 320px);
+  aspect-ratio: 1;
+  height: auto;
+  max-height: none;
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: 0.65rem;
   background: #000;
   flex-shrink: 0;
+  margin-inline: auto;
 }
 
 .scanned-image-card img {
@@ -716,6 +721,13 @@ h1, h2, h3, h4, .font-display {
   flex-direction: column;
   gap: 0.55rem;
   max-height: 200px;
+
+.scanner-unavailable {
+  padding: 0.75rem;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+}
   overflow-y: auto;
   padding-right: 2px;
 }

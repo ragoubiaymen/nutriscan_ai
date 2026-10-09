@@ -642,13 +642,13 @@
           <!-- STEP A: UPLOAD / CAMERA SELECTION -->
           <div id="scan-step-upload" class="scan-step active">
             <div class="camera-upload-tabs">
-              <button id="tab-upload-file" class="tab-btn active">Charger une Photo</button>
-              <button id="tab-camera-live" class="tab-btn">Appareil Photo (Live)</button>
+              <button id="tab-upload-file" class="tab-btn">Charger une Photo</button>
+              <button id="tab-camera-live" class="tab-btn active">Appareil Photo (Live)</button>
               <button id="tab-presets" class="tab-btn">Plats Exemples</button>
             </div>
 
             <!-- Upload drop zone -->
-            <div id="pane-upload-file" class="tab-pane active">
+            <div id="pane-upload-file" class="tab-pane">
               <div class="dropzone" id="dropzone-area">
                 <input type="file" id="input-file-meal" accept="image/*" class="file-input-hidden" />
                 <div class="dropzone-content">
@@ -665,16 +665,17 @@
             </div>
 
             <!-- Live Camera stream pane -->
-            <div id="pane-camera-live" class="tab-pane">
+            <div id="pane-camera-live" class="tab-pane active">
               <div class="camera-stream-wrapper">
-                <video id="webcam-video" autoplay playsinline class="webcam-preview"></video>
+                <video id="webcam-video" autoplay playsinline muted class="webcam-preview"></video>
                 <div class="camera-overlay-grid"></div>
                 <div class="camera-controls">
-                  <button id="btn-capture-photo" class="btn-shutter" title="Prendre la photo">
+                  <button id="btn-capture-photo" class="btn-shutter" title="Prendre la photo" disabled>
                     <div class="shutter-inner"></div>
                   </button>
                 </div>
               </div>
+              <p id="camera-status" class="camera-status" role="status" aria-live="polite">Demande d'accès à la caméra...</p>
             </div>
 
             <!-- Sample Presets pane -->

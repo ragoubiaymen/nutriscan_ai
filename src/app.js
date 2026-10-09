@@ -812,6 +812,7 @@ function openScannerModal(targetMeal) {
   document.getElementById('select-target-meal').value = targetMeal;
   switchScanStep('upload');
   document.getElementById('modal-scanner').classList.add('active');
+  activateScannerTab('tab-camera-live');
 }
 
 function switchScanStep(stepName) {
@@ -828,21 +829,7 @@ function initAIScanner() {
   const tabs = document.querySelectorAll('.camera-upload-tabs .tab-btn');
   tabs.forEach(tab => {
     tab.addEventListener('click', (e) => {
-      tabs.forEach(t => t.classList.remove('active'));
-      e.target.classList.add('active');
-
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-
-      if (e.target.id === 'tab-upload-file') {
-        document.getElementById('pane-upload-file').classList.add('active');
-        stopWebcamStream();
-      } else if (e.target.id === 'tab-camera-live') {
-        document.getElementById('pane-camera-live').classList.add('active');
-        startWebcamStream();
-      } else if (e.target.id === 'tab-presets') {
-        document.getElementById('pane-presets').classList.add('active');
-        stopWebcamStream();
-      }
+      activateScannerTab(e.currentTarget.id);
     });
   });
 
@@ -851,7 +838,12 @@ function initAIScanner() {
       const presetKey = e.currentTarget.getAttribute('data-preset');
       const presetData = AI_PRESETS_DATA[presetKey];
       if (presetData) {
-        startAIAnalysisProcess(presetData.image, presetData);
+        startAIAnalysisProcess(presetData.image, {
+          ...presetData,
+          isDemo: true,
+          confidence: null,
+          advice: `Démonstration uniquement : ces valeurs sont prédéfinies et ne proviennent pas d'une analyse IA. ${presetData.advice}`
+        });
       }
     });
   });
@@ -861,24 +853,30 @@ function initAIScanner() {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (evt) => {
-        startAIAnalysisProcess(evt.target.result, createCustomPhotoAIResult());
+      reader.onload = async (evt) => {
+        try {
+          const squareImage = await cropImageToSquare(evt.target.result);
+          startAIAnalysisProcess(squareImage, createUnavailablePhotoResult());
+        } catch (error) {
+          showToast('Impossible de lire cette image. Essayez une autre photo.');
+        }
       };
       reader.readAsDataURL(file);
     }
+    e.target.value = '';
   });
 
   document.getElementById('btn-capture-photo').addEventListener('click', () => {
     const video = document.getElementById('webcam-video');
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg');
+    if (!video.videoWidth || !video.videoHeight) {
+      showToast('La caméra n’est pas encore prête.');
+      return;
+    }
+
+    const dataUrl = cropFrameToSquare(video, video.videoWidth, video.videoHeight);
 
     stopWebcamStream();
-    startAIAnalysisProcess(dataUrl, createCustomPhotoAIResult());
+    startAIAnalysisProcess(dataUrl, createUnavailablePhotoResult());
   });
 
   document.getElementById('btn-save-ai-meal').addEventListener('click', () => {
@@ -886,18 +884,78 @@ function initAIScanner() {
   });
 }
 
+function activateScannerTab(tabId) {
+  document.querySelectorAll('.camera-upload-tabs .tab-btn').forEach(tab => {
+    tab.classList.toggle('active', tab.id === tabId);
+  });
+
+  document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+  const paneId = {
+    'tab-upload-file': 'pane-upload-file',
+    'tab-camera-live': 'pane-camera-live',
+    'tab-presets': 'pane-presets'
+  }[tabId];
+  if (paneId) document.getElementById(paneId).classList.add('active');
+
+  if (tabId === 'tab-camera-live') startWebcamStream();
+  else stopWebcamStream();
+}
+
+function cropFrameToSquare(source, sourceWidth, sourceHeight) {
+  const side = Math.min(sourceWidth, sourceHeight);
+  const sourceX = (sourceWidth - side) / 2;
+  const sourceY = (sourceHeight - side) / 2;
+  const outputSize = Math.min(side, 1024);
+  const canvas = document.createElement('canvas');
+  canvas.width = outputSize;
+  canvas.height = outputSize;
+  canvas.getContext('2d').drawImage(source, sourceX, sourceY, side, side, 0, 0, outputSize, outputSize);
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+function cropImageToSquare(imageSrc) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        resolve(cropFrameToSquare(image, image.naturalWidth, image.naturalHeight));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = reject;
+    image.src = imageSrc;
+  });
+}
+
 function startWebcamStream() {
   const video = document.getElementById('webcam-video');
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        state.webcamStream = stream;
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.warn('Camera access prevented or not available:', err);
-      });
+  const captureButton = document.getElementById('btn-capture-photo');
+  const status = document.getElementById('camera-status');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = 'Caméra indisponible. Ouvrez le site Vercel en HTTPS ou importez une photo.';
+    captureButton.disabled = true;
+    return;
   }
+
+  if (state.webcamStream) return;
+
+  status.textContent = 'Demande d’accès à la caméra...';
+  captureButton.disabled = true;
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+    .then(stream => {
+      state.webcamStream = stream;
+      video.srcObject = stream;
+      captureButton.disabled = false;
+      status.textContent = 'Cadrez votre plat dans le carré, puis prenez la photo.';
+      return video.play();
+    })
+    .catch(err => {
+      console.warn('Camera access prevented or not available:', err);
+      status.textContent = 'Accès caméra refusé ou indisponible. Autorisez la caméra dans le navigateur ou importez une photo.';
+      captureButton.disabled = true;
+    });
 }
 
 function stopWebcamStream() {
@@ -905,24 +963,32 @@ function stopWebcamStream() {
     state.webcamStream.getTracks().forEach(track => track.stop());
     state.webcamStream = null;
   }
+  const captureButton = document.getElementById('btn-capture-photo');
+  if (captureButton) captureButton.disabled = true;
+  const video = document.getElementById('webcam-video');
+  if (video) video.srcObject = null;
 }
 
-function createCustomPhotoAIResult() {
+function createUnavailablePhotoResult() {
   return {
-    title: 'Plat Scanné par IA Vision',
-    confidence: 96,
-    advice: 'L\'analyse vision identifie une assiette équilibrée à forte densité de nutriments.',
-    items: [
-      { name: 'Protéines Maigres (Poulet/Poisson)', grams: 140, calsPer100g: 175, protPer100g: 26, carbPer100g: 0, fatPer100g: 4.5, fibPer100g: 0, bbox: { top: 20, left: 15, width: 40, height: 35 } },
-      { name: 'Accompagnement (Riz/Quinoa)', grams: 150, calsPer100g: 130, protPer100g: 3, carbPer100g: 27, fatPer100g: 0.5, fibPer100g: 1, bbox: { top: 40, left: 50, width: 40, height: 40 } },
-      { name: 'Légumes Verts & Huile', grams: 100, calsPer100g: 40, protPer100g: 2, carbPer100g: 6, fatPer100g: 0.3, fibPer100g: 3, bbox: { top: 15, left: 55, width: 35, height: 30 } }
-    ]
+    title: 'Photo non analysée',
+    confidence: null,
+    analysisAvailable: false,
+    advice: 'Aucune analyse nutritionnelle réelle n’a été effectuée. Les calories et macros restent à zéro. Une connexion à un service d’IA est nécessaire pour analyser cette photo.',
+    items: []
   };
 }
 
 function startAIAnalysisProcess(imageSrc, aiResultData) {
   switchScanStep('analyzing');
   document.getElementById('img-scanned-preview').src = imageSrc;
+
+  if (aiResultData.analysisAvailable === false) {
+    state.currentScannedMealData = { ...aiResultData, imageSrc };
+    renderAIScanResults();
+    switchScanStep('results');
+    return;
+  }
 
   const statusTitle = document.getElementById('scan-status-title');
   const statusSub = document.getElementById('scan-status-sub');
@@ -947,7 +1013,7 @@ function renderAIScanResults() {
   const data = state.currentScannedMealData;
 
   document.getElementById('res-final-img').src = data.imageSrc;
-  document.getElementById('res-ai-confidence').textContent = `${data.confidence}%`;
+  document.getElementById('res-ai-confidence').textContent = data.isDemo ? 'Démo' : data.confidence == null ? 'Non disponible' : `${data.confidence}%`;
   document.getElementById('res-ai-advice').textContent = data.advice;
 
   renderBoundingBoxes(data.items);
@@ -987,6 +1053,10 @@ function renderBoundingBoxes(items) {
 function renderDetectedItemsList() {
   const container = document.getElementById('ai-detected-items-list');
   container.innerHTML = '';
+
+  if (!state.currentScannedMealData.items.length) {
+    container.innerHTML = '<p class="text-muted scanner-unavailable">Aucun aliment ni nutriment n’a été estimé. Les totaux à zéro ne sont pas une analyse du repas.</p>';
+  }
 
   let totalCals = 0;
   let totalProt = 0;
@@ -1046,6 +1116,11 @@ function renderDetectedItemsList() {
 
 function saveCurrentScannedMealToJournal() {
   const data = state.currentScannedMealData;
+  if (!data || data.analysisAvailable === false) {
+    showToast('Impossible d’ajouter ce repas : aucune analyse nutritionnelle réelle n’est disponible.');
+    return;
+  }
+
   const targetMealCat = document.getElementById('select-target-meal').value;
   const today = state.selectedDateStr;
 
