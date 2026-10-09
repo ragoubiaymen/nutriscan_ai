@@ -821,7 +821,7 @@ function switchScanStep(stepName) {
   if (stepEl) stepEl.classList.add('active');
 
   const footerSaveBtn = document.getElementById('btn-save-ai-meal');
-  if (stepName === 'results') footerSaveBtn.classList.remove('hidden');
+  if (stepName === 'results' && state.currentScannedMealData?.analysisAvailable !== false && !state.currentScannedMealData?.isDemo) footerSaveBtn.classList.remove('hidden');
   else footerSaveBtn.classList.add('hidden');
 }
 
@@ -856,7 +856,7 @@ function initAIScanner() {
       reader.onload = async (evt) => {
         try {
           const squareImage = await cropImageToSquare(evt.target.result);
-          startAIAnalysisProcess(squareImage, createUnavailablePhotoResult());
+          startAIAnalysisProcess(squareImage, null);
         } catch (error) {
           showToast('Impossible de lire cette image. Essayez une autre photo.');
         }
@@ -876,7 +876,7 @@ function initAIScanner() {
     const dataUrl = cropFrameToSquare(video, video.videoWidth, video.videoHeight);
 
     stopWebcamStream();
-    startAIAnalysisProcess(dataUrl, createUnavailablePhotoResult());
+    startAIAnalysisProcess(dataUrl, null);
   });
 
   document.getElementById('btn-save-ai-meal').addEventListener('click', () => {
@@ -969,12 +969,12 @@ function stopWebcamStream() {
   if (video) video.srcObject = null;
 }
 
-function createUnavailablePhotoResult() {
+function createUnavailablePhotoResult(message) {
   return {
     title: 'Photo non analysée',
     confidence: null,
     analysisAvailable: false,
-    advice: 'Aucune analyse nutritionnelle réelle n’a été effectuée. Les calories et macros restent à zéro. Une connexion à un service d’IA est nécessaire pour analyser cette photo.',
+    advice: message || 'Aucune analyse nutritionnelle réelle n’a été effectuée. Les calories et macros restent à zéro.',
     items: []
   };
 }
@@ -995,6 +995,39 @@ function startAIAnalysisProcess(imageSrc, aiResultData) {
 
   statusTitle.textContent = "Détection multi-objets des composants...";
   statusSub.textContent = "IA Vision en cours d'exécution...";
+
+  if (!aiResultData) {
+    statusTitle.textContent = 'Analyse réelle de la photo...';
+    statusSub.textContent = 'Envoi sécurisé au service Gemini. Les valeurs nutritionnelles resteront des estimations.';
+
+    fetch('/api/analyze-meal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageDataUrl: imageSrc })
+    })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Le service d’analyse est indisponible.');
+        return result;
+      })
+      .then(result => {
+        if (!result.analysisAvailable || !Array.isArray(result.items) || result.items.length === 0) {
+          throw new Error('Aucun aliment n’a pu être analysé sur cette photo.');
+        }
+        state.currentScannedMealData = { ...result, imageSrc };
+      })
+      .catch(error => {
+        state.currentScannedMealData = {
+          ...createUnavailablePhotoResult(error.message),
+          imageSrc
+        };
+      })
+      .finally(() => {
+        renderAIScanResults();
+        switchScanStep('results');
+      });
+    return;
+  }
 
   setTimeout(() => {
     statusTitle.textContent = "Estimation volumétrique & calcul des portions...";
@@ -1116,7 +1149,7 @@ function renderDetectedItemsList() {
 
 function saveCurrentScannedMealToJournal() {
   const data = state.currentScannedMealData;
-  if (!data || data.analysisAvailable === false) {
+  if (!data || data.analysisAvailable === false || data.isDemo) {
     showToast('Impossible d’ajouter ce repas : aucune analyse nutritionnelle réelle n’est disponible.');
     return;
   }
