@@ -446,7 +446,7 @@
         <section id="view-profile" class="view-section">
           <div class="section-title-wrap">
             <h2>Moteur PHYSIO-AI & Composition Corporelle</h2>
-            <p class="text-muted">Formules scientifiques de Mifflin-St Jeor & Formule US Navy Body Fat</p>
+            <p class="text-muted">Formule de Mifflin-St Jeor et estimation corporelle basée sur l’IMC</p>
           </div>
 
           <div class="profile-calculator-grid">
@@ -480,17 +480,6 @@
                   </div>
                 </div>
 
-                <div class="form-row duo">
-                  <div class="form-group">
-                    <label for="input-neck">Tour de cou (cm)</label>
-                    <input type="number" id="input-neck" class="form-input" value="38" min="20" max="60" />
-                  </div>
-                  <div class="form-group">
-                    <label for="input-waist">Tour de taille (cm)</label>
-                    <input type="number" id="input-waist" class="form-input" value="82" min="40" max="150" />
-                  </div>
-                </div>
-
                 <div class="form-group">
                   <label for="input-activity">Niveau d'activité physique (PAL)</label>
                   <select id="input-activity" class="form-input">
@@ -520,7 +509,7 @@
 
             <!-- Scientific Results Card -->
             <div class="card-glass bmr-results-card">
-              <div class="results-badge">Formule Mifflin-St Jeor & US Navy</div>
+              <div class="results-badge">Mifflin-St Jeor & estimation par IMC</div>
               <h3>Résultats de Composition Corporelle</h3>
 
               <div class="metric-result-box">
@@ -543,9 +532,9 @@
                 </div>
 
                 <div class="metric-single">
-                  <span class="metric-title">Taux de Masse Grasse Estimé (US Navy)</span>
+                  <span class="metric-title">Taux de masse grasse estimé (IMC)</span>
                   <span id="res-bodyfat" class="metric-value" style="color: var(--cyan-accent);">15.2%</span>
-                  <span class="metric-desc">Masse sèche estimée : 63.6 kg</span>
+                  <span id="res-bodyfat-desc" class="metric-desc">Estimation indicative, pas une mesure directe</span>
                 </div>
               </div>
 

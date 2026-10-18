@@ -18,8 +18,6 @@ const DEFAULT_PROFILE = {
   age: 28,
   weight: 75,
   height: 178,
-  neck: 38,
-  waist: 82,
   activity: 1.375,
   goal: 'deficit_moderate', // -300 kcal
   bmr: 1720,
@@ -249,8 +247,8 @@ function initResetJournal() {
   });
 }
 
-// BMR, TDEE & US NAVY BODY FAT ENGINE
-function calculatePhysiology(gender, age, weightKg, heightCm, neckCm, waistCm, activityFactor, goalType) {
+// BMR, TDEE & BMI-BASED BODY FAT ESTIMATE
+function calculatePhysiology(gender, age, weightKg, heightCm, activityFactor, goalType) {
   let bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age);
   if (gender === 'male') {
     bmr += 5;
@@ -279,16 +277,7 @@ function calculatePhysiology(gender, age, weightKg, heightCm, neckCm, waistCm, a
 
   const fibGrams = 30;
 
-  let bodyFatPct = 15.0;
-  if (neckCm > 0 && waistCm > 0 && heightCm > 0) {
-    if (gender === 'male') {
-      const val = 495 / (1.0324 - 0.19077 * Math.log10(waistCm - neckCm) + 0.15456 * Math.log10(heightCm)) - 450;
-      bodyFatPct = Math.min(45, Math.max(5, Math.round(val * 10) / 10));
-    } else {
-      const val = 495 / (1.29579 - 0.35004 * Math.log10(waistCm - neckCm) + 0.22100 * Math.log10(heightCm)) - 450;
-      bodyFatPct = Math.min(50, Math.max(8, Math.round(val * 10) / 10));
-    }
-  }
+  const bodyFatPct = estimateBodyFatPct(gender, age, weightKg, heightCm);
 
   return {
     bmr,
@@ -302,6 +291,14 @@ function calculatePhysiology(gender, age, weightKg, heightCm, neckCm, waistCm, a
       fiber: fibGrams
     }
   };
+}
+
+function estimateBodyFatPct(gender, age, weightKg, heightCm) {
+  const bmi = weightKg / ((heightCm / 100) ** 2);
+  const estimate = 1.2 * bmi + 0.23 * age - (gender === 'male' ? 10.8 : 0) - 5.4;
+  const lowerBound = gender === 'male' ? 5 : 8;
+  const upperBound = gender === 'male' ? 45 : 50;
+  return Math.min(upperBound, Math.max(lowerBound, Math.round(estimate * 10) / 10));
 }
 
 // UI RENDERERS
@@ -319,15 +316,15 @@ function renderProfileView() {
   document.getElementById('input-age').value = p.age;
   document.getElementById('input-weight').value = p.weight;
   document.getElementById('input-height').value = p.height;
-  if (document.getElementById('input-neck')) document.getElementById('input-neck').value = p.neck || 38;
-  if (document.getElementById('input-waist')) document.getElementById('input-waist').value = p.waist || 82;
   document.getElementById('input-activity').value = p.activity;
   document.getElementById('input-goal').value = p.goal;
 
   document.getElementById('res-bmr').textContent = `${p.bmr.toLocaleString()} kcal`;
   document.getElementById('res-tdee').textContent = `${p.tdee.toLocaleString()} kcal`;
   document.getElementById('res-target').textContent = `${p.targetCalories.toLocaleString()} kcal`;
-  if (document.getElementById('res-bodyfat')) document.getElementById('res-bodyfat').textContent = `${p.bodyFatPct || 15.2}%`;
+  const bodyFatPct = estimateBodyFatPct(p.gender, p.age, p.weight, p.height);
+  document.getElementById('res-bodyfat').textContent = `${bodyFatPct}%`;
+  document.getElementById('res-bodyfat-desc').textContent = `Masse maigre estimée : ${(p.weight * (1 - bodyFatPct / 100)).toFixed(1)} kg · estimation indicative`;
 
   document.getElementById('res-prot-g').textContent = `${p.macros.protein}g`;
   document.getElementById('res-carb-g').textContent = `${p.macros.carbs}g`;
@@ -713,15 +710,13 @@ function initProfileForm() {
     const age = parseInt(document.getElementById('input-age').value);
     const weight = parseFloat(document.getElementById('input-weight').value);
     const height = parseInt(document.getElementById('input-height').value);
-    const neck = parseInt(document.getElementById('input-neck').value) || 38;
-    const waist = parseInt(document.getElementById('input-waist').value) || 82;
     const activity = parseFloat(document.getElementById('input-activity').value);
     const goal = document.getElementById('input-goal').value;
 
-    const computed = calculatePhysiology(gender, age, weight, height, neck, waist, activity, goal);
+    const computed = calculatePhysiology(gender, age, weight, height, activity, goal);
 
     const newProfile = {
-      gender, age, weight, height, neck, waist, activity, goal,
+      gender, age, weight, height, activity, goal,
       ...computed
     };
 
