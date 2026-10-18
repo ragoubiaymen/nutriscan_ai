@@ -829,3 +829,61 @@ h1, h2, h3, h4, .font-display {
   .form-row.duo { grid-template-columns: 1fr; gap: 0; }
   .form-row.quad { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Settings Modal & Engine Status Badge */
+.key-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.key-input-wrap .form-input {
+  padding-right: 42px;
+}
+
+.btn-input-action {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  color: var(--text-muted);
+}
+
+.btn-input-action:hover {
+  color: var(--text-main);
+}
+
+.badge-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+}
+
+.badge-status-pill .status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan-accent);
+  box-shadow: 0 0 8px var(--cyan-accent);
+}
+
+.badge-status-pill.gemini-active {
+  background: hsla(158, 82%, 46%, 0.15);
+  border-color: var(--emerald-primary);
+  color: var(--emerald-primary);
+}
+
+.badge-status-pill.gemini-active .status-indicator {
+  background: var(--emerald-primary);
+  box-shadow: 0 0 8px var(--emerald-primary);
+}
+

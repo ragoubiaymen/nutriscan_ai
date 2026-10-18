@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>NutriVision AI Pro - Suivi Nutritionnel Mobile & IA Intelligente</title>
+  <meta name="theme-color" content="#0b0f19" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NutriVision PRO" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -738,16 +745,16 @@
 
                   <div class="ai-confidence-badge">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Confiance IA : <strong id="res-ai-confidence">97%</strong></span>
+                    <span>Confiance IA : <strong id="res-ai-confidence">--%</strong></span>
                   </div>
                 </div>
 
                 <div class="card-glass ai-advice-box">
                   <div class="flex items-center justify-between mb-1">
                     <h4>💡 Analyse & Conseil IA</h4>
-                    <span id="meal-nutriscore-badge" class="badge-score score-a">Score A</span>
+                    <span id="meal-nutriscore-badge" class="badge-score score-a">Score --</span>
                   </div>
-                  <p id="res-ai-advice" class="text-xs">Repas équilibré riche en protéines de haute valeur biologique et fibres rassasiantes.</p>
+                  <p id="res-ai-advice" class="text-xs">Cadrez votre plat et déclenchez l'analyse pour calculer les calories et macronutriments précis.</p>
                 </div>
               </div>
 
@@ -766,13 +773,13 @@
                 <div class="total-result-banner">
                   <div>
                     <span class="text-xs text-muted">Total Calculé</span>
-                    <h3 id="res-total-cals" class="total-cal-display">580 <small>kcal</small></h3>
+                    <h3 id="res-total-cals" class="total-cal-display">0 <small>kcal</small></h3>
                   </div>
                   <div class="mini-macro-pills">
-                    <span class="m-pill prot">P: <strong id="res-total-prot">42g</strong></span>
-                    <span class="m-pill carb">G: <strong id="res-total-carb">48g</strong></span>
-                    <span class="m-pill fat">L: <strong id="res-total-fat">18g</strong></span>
-                    <span class="m-pill fib">F: <strong id="res-total-fib">8g</strong></span>
+                    <span class="m-pill prot">P: <strong id="res-total-prot">0g</strong></span>
+                    <span class="m-pill carb">G: <strong id="res-total-carb">0g</strong></span>
+                    <span class="m-pill fat">L: <strong id="res-total-fat">0g</strong></span>
+                    <span class="m-pill fib">F: <strong id="res-total-fib">0g</strong></span>
                   </div>
                 </div>
 
@@ -915,20 +922,51 @@
 
     <!-- MODAL 4: API KEY & SETTINGS MODAL -->
     <div id="modal-settings" class="modal-overlay">
-      <div class="modal-container modal-sm card-glass">
+      <div class="modal-container modal-md card-glass">
         <div class="modal-header">
-          <h3 class="modal-title">Paramètres IA & Application</h3>
+          <h3 class="modal-title">Paramètres IA & Reconnaissance d'Aliments</h3>
           <button class="btn-close-modal">&times;</button>
         </div>
         <div class="modal-body">
-          <p class="text-xs text-muted mb-3">
-            Par défaut, NutriVision AI PRO intègre son propre moteur d'analyse de vision haute précision. Vous pouvez ajouter votre propre clé API Google Gemini 1.5/2.0 pour une exécution en direct via le cloud Gemini.
-          </p>
-          <div class="form-group">
-            <label for="input-gemini-key">Clé API Gemini (Optionnel)</label>
-            <input type="password" id="input-gemini-key" class="form-input" placeholder="AIzaSy..." />
+          <div class="settings-engine-status mb-3">
+            <span class="text-xs text-muted">Moteur d'analyse IA actif :</span>
+            <div id="settings-active-engine-badge" class="badge-status-pill mt-1">
+              <span class="status-indicator"></span>
+              <span id="settings-active-engine-text">Moteur Vision Optique Local (Actif)</span>
+            </div>
           </div>
-          <button id="btn-save-settings" class="btn btn-primary btn-block mt-3">Sauvegarder les paramètres</button>
+
+          <div class="form-group mb-3">
+            <label for="input-gemini-key">Clé API Google Gemini (Optionnelle - 100% Gratuite)</label>
+            <div class="key-input-wrap">
+              <input type="password" id="input-gemini-key" class="form-input" placeholder="Collez votre clé : AIzaSy..." autocomplete="off" />
+              <button type="button" id="btn-toggle-key-visibility" class="btn-input-action" title="Afficher/Masquer la clé">👁️</button>
+            </div>
+            <p class="text-xs text-muted mt-1">
+              Pour une analyse multimodale directe via Google Gemini Flash, vous pouvez obtenir une clé gratuite en 30s sur 
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color: var(--cyan-accent); text-decoration: underline;">Google AI Studio</a>.
+            </p>
+          </div>
+
+          <div class="settings-actions-row flex gap-2 mb-3">
+            <button type="button" id="btn-test-gemini-key" class="btn btn-outline text-xs" style="flex: 1;">
+              ⚡ Tester la Clé
+            </button>
+            <button type="button" id="btn-clear-gemini-key" class="btn btn-outline text-xs">
+              Effacer
+            </button>
+          </div>
+
+          <p id="gemini-key-test-status" class="text-xs text-muted mb-3" style="min-height: 18px;"></p>
+
+          <div class="card-glass p-3 mb-3" style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 0.75rem;">
+            <h5 class="text-xs font-semibold mb-1" style="color: var(--cyan-accent);">📱 Fonctionnement Mobile 24h/24 sans PC</h5>
+            <p class="text-xs text-muted">
+              Vos repas, objectifs et paramètres sont conservés sur votre téléphone. Pour ouvrir l'application 24h/24 même avec le PC éteint, déployez-la sur Vercel (1 clic gratuit).
+            </p>
+          </div>
+
+          <button id="btn-save-settings" class="btn btn-primary btn-block">Enregistrer les Paramètres</button>
         </div>
       </div>
     </div>
