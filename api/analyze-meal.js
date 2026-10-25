@@ -84,6 +84,7 @@ export default async function handler(req, res) {
       advice: `${String(analysis.advice || 'Les quantités et valeurs nutritionnelles sont des estimations visuelles.') .slice(0, 500)} Vérifiez les portions avant de les enregistrer.`,
       confidence: null,
       analysisAvailable: true,
+      source: 'Estimation visuelle Gemini — à confirmer',
       items
     });
   } catch (error) {

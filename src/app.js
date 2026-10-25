@@ -29,7 +29,8 @@ const DEFAULT_PROFILE = {
     carbs: 232,
     fat: 57,
     fiber: 30
-  }
+  },
+  preferences: { diet: 'all', cuisine: 'any', budget: 'standard', avoid: '' }
 };
 
 // OFFLINE FOOD DATABASE FOR SEARCH & AI MATCHICAL LOOKUP
@@ -49,7 +50,98 @@ const FOOD_DATABASE = [
   { name: 'Beurre de Cacahuète', cals: 588, prot: 25, carb: 20, fat: 50, fib: 6, unit: 'g' },
   { name: 'Pain Complet Bio', cals: 247, prot: 13, carb: 41, fat: 3.4, fib: 7, unit: 'g' },
   { name: 'Fromage Blanc 0%', cals: 48, prot: 8.5, carb: 3.5, fat: 0.1, fib: 0, unit: 'g' },
-  { name: 'Patate Douce Rôtie', cals: 86, prot: 1.6, carb: 20, fat: 0.1, fib: 3, unit: 'g' }
+  { name: 'Patate Douce Rôtie', cals: 86, prot: 1.6, carb: 20, fat: 0.1, fib: 3, unit: 'g' },
+  { name: 'Semoule de couscous cuite', cals: 112, prot: 3.8, carb: 23.2, fat: 0.2, fib: 1.4, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Pois chiches cuits', cals: 164, prot: 8.9, carb: 27.4, fat: 2.6, fib: 7.6, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Tomate', cals: 18, prot: 0.9, carb: 3.9, fat: 0.2, fib: 1.2, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Oignon', cals: 40, prot: 1.1, carb: 9.3, fat: 0.1, fib: 1.7, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Poivron', cals: 31, prot: 1, carb: 6, fat: 0.3, fib: 2.1, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Ail', cals: 149, prot: 6.4, carb: 33, fat: 0.5, fib: 2.1, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Harissa', cals: 48, prot: 2, carb: 8, fat: 1, fib: 3, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Pain blanc', cals: 265, prot: 9, carb: 49, fat: 3.2, fib: 2.7, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Œuf entier', cals: 143, prot: 12.6, carb: 0.7, fat: 9.5, fib: 0, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Thon au naturel égoutté', cals: 116, prot: 25.5, carb: 0, fat: 0.8, fib: 0, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Courgette', cals: 17, prot: 1.2, carb: 3.1, fat: 0.3, fib: 1, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Carotte', cals: 41, prot: 0.9, carb: 9.6, fat: 0.2, fib: 2.8, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Pomme de terre', cals: 87, prot: 1.9, carb: 20.1, fat: 0.1, fib: 1.8, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Agneau maigre', cals: 206, prot: 25, carb: 0, fat: 11, fib: 0, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Merguez', cals: 300, prot: 16, carb: 2, fat: 26, fib: 0, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' },
+  { name: 'Feuille de brick', cals: 280, prot: 8, carb: 57, fat: 1.5, fib: 2, unit: 'g', cuisine: 'tunisian', source: 'Valeurs moyennes indicatives par ingrédient' }
+];
+
+const TUNISIAN_RECIPES = [
+  {
+    id: 'couscous-poulet', name: 'Couscous au poulet', diet: 'omnivore', budget: 'standard',
+    ingredients: [
+      { name: 'Semoule de couscous cuite', grams: 180 }, { name: 'Blanc de Poulet Grillé', grams: 100 },
+      { name: 'Pois chiches cuits', grams: 40 }, { name: 'Carotte', grams: 60 },
+      { name: 'Courgette', grams: 60 }, { name: 'Tomate', grams: 60 }, { name: "Huile d'Olive Vierge", grams: 8 }
+    ]
+  },
+  {
+    id: 'ojja-merguez', name: 'Ojja aux merguez et œufs', diet: 'omnivore', budget: 'standard',
+    ingredients: [
+      { name: 'Merguez', grams: 70 }, { name: 'Œuf entier', grams: 100 },
+      { name: 'Tomate', grams: 180 }, { name: 'Poivron', grams: 80 },
+      { name: 'Ail', grams: 5 }, { name: 'Harissa', grams: 8 }, { name: "Huile d'Olive Vierge", grams: 5 }
+    ]
+  },
+  {
+    id: 'lablabi', name: 'Lablabi (pois chiches et pain)', diet: 'vegetarian', budget: 'economy',
+    ingredients: [
+      { name: 'Pois chiches cuits', grams: 200 }, { name: 'Pain blanc', grams: 50 },
+      { name: 'Œuf entier', grams: 50 }, { name: 'Ail', grams: 5 },
+      { name: 'Harissa', grams: 8 }, { name: "Huile d'Olive Vierge", grams: 5 }
+    ]
+  },
+  {
+    id: 'brik-thon', name: 'Brik au thon et œuf (huile à ajuster)', diet: 'pescatarian', budget: 'standard',
+    ingredients: [
+      { name: 'Thon au naturel égoutté', grams: 50 }, { name: 'Œuf entier', grams: 50 },
+      { name: 'Pomme de terre', grams: 60 }, { name: 'Feuille de brick', grams: 25 },
+      { name: "Huile d'Olive Vierge", grams: 8 }
+    ]
+  },
+  {
+    id: 'couscous-vegetarien', name: 'Couscous aux légumes', diet: 'vegetarian', budget: 'economy',
+    ingredients: [
+      { name: 'Semoule de couscous cuite', grams: 180 }, { name: 'Pois chiches cuits', grams: 70 },
+      { name: 'Carotte', grams: 70 }, { name: 'Courgette', grams: 80 },
+      { name: 'Tomate', grams: 70 }, { name: "Huile d'Olive Vierge", grams: 7 }
+    ]
+  }
+];
+
+const OTHER_RECIPES = [
+  {
+    id: 'poulet-riz', name: 'Poulet, riz et brocolis', cuisine: 'international',
+    diet: 'omnivore', budget: 'standard',
+    ingredients: [
+      { name: 'Blanc de Poulet Grillé', grams: 120 }, { name: 'Riz Basmati Cuit', grams: 150 },
+      { name: 'Brocolis Vapeur', grams: 120 }, { name: "Huile d'Olive Vierge", grams: 5 }
+    ]
+  },
+  {
+    id: 'omelette-pain', name: 'Omelette et pain complet', cuisine: 'international',
+    diet: 'vegetarian', budget: 'economy',
+    ingredients: [
+      { name: 'Omelette (2 Œufs Bio)', grams: 120 }, { name: 'Pain Complet Bio', grams: 60 },
+      { name: 'Brocolis Vapeur', grams: 80 }
+    ]
+  },
+  {
+    id: 'saumon-quinoa', name: 'Saumon, quinoa et avocat', cuisine: 'international',
+    diet: 'pescatarian', budget: 'premium',
+    ingredients: [
+      { name: 'Saumon Grillé', grams: 100 }, { name: 'Quinoa Cuit', grams: 140 },
+      { name: 'Avocat Frais', grams: 40 }, { name: 'Brocolis Vapeur', grams: 80 }
+    ]
+  }
+];
+
+const RECIPE_DATABASE = [
+  ...TUNISIAN_RECIPES.map(recipe => ({ ...recipe, cuisine: 'tunisian' })),
+  ...OTHER_RECIPES
 ];
 
 // PRESET AI MEAL SAMPLES WITH SIMULATED OBJECT DETECTION BOUNDING BOXES
@@ -114,7 +206,8 @@ let state = {
   selectedMealTarget: 'lunch',
   currentScannedMealData: null,
   webcamStream: null,
-  isMicActive: false
+  isMicActive: false,
+  foodScope: 'all'
 };
 
 // INITIALIZATION ENTRY POINT
@@ -156,9 +249,17 @@ function formatDateDisplay(dateStr) {
 function loadStoredProfile() {
   const stored = localStorage.getItem(STORAGE_KEYS.PROFILE);
   if (stored) {
-    try { return JSON.parse(stored); } catch (e) { console.error(e); }
+    try {
+      const profile = JSON.parse(stored);
+      return {
+        ...DEFAULT_PROFILE,
+        ...profile,
+        macros: { ...DEFAULT_PROFILE.macros, ...profile.macros },
+        preferences: { ...DEFAULT_PROFILE.preferences, ...profile.preferences }
+      };
+    } catch (e) { console.error(e); }
   }
-  return { ...DEFAULT_PROFILE };
+  return { ...DEFAULT_PROFILE, macros: { ...DEFAULT_PROFILE.macros }, preferences: { ...DEFAULT_PROFILE.preferences } };
 }
 
 function saveProfile(profileData) {
@@ -255,6 +356,7 @@ function calculatePhysiology(gender, age, weightKg, heightCm, activityFactor, go
   } else {
     bmr -= 161;
   }
+
   bmr = Math.round(bmr);
 
   const tdee = Math.round(bmr * parseFloat(activityFactor));
@@ -301,6 +403,41 @@ function estimateBodyFatPct(gender, age, weightKg, heightCm) {
   return Math.min(upperBound, Math.max(lowerBound, Math.round(estimate * 10) / 10));
 }
 
+function normalizeFoodName(name) {
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function getUniqueFoodDatabase() {
+  const uniqueFoods = new Map();
+  FOOD_DATABASE.forEach(food => {
+    const key = normalizeFoodName(food.name);
+    if (!uniqueFoods.has(key)) {
+      uniqueFoods.set(key, {
+        ...food,
+        source: food.source || 'Base locale — valeurs moyennes indicatives'
+      });
+    }
+  });
+  return [...uniqueFoods.values()];
+}
+
+function getRecipeNutrition(recipe, gramsByIngredient = null) {
+  const foodsByName = new Map(getUniqueFoodDatabase().map(food => [food.name, food]));
+  return recipe.ingredients.reduce((nutrition, ingredient, index) => {
+    const food = foodsByName.get(ingredient.name);
+    if (!food) throw new Error(`Ingrédient absent de la base : ${ingredient.name}`);
+    const grams = gramsByIngredient ? gramsByIngredient[index] : ingredient.grams;
+    const factor = grams / 100;
+    nutrition.weight += grams;
+    nutrition.cals += food.cals * factor;
+    nutrition.prot += food.prot * factor;
+    nutrition.carb += food.carb * factor;
+    nutrition.fat += food.fat * factor;
+    nutrition.fib += food.fib * factor;
+    return nutrition;
+  }, { weight: 0, cals: 0, prot: 0, carb: 0, fat: 0, fib: 0 });
+}
+
 // UI RENDERERS
 function renderAllViews() {
   renderProfileView();
@@ -311,6 +448,7 @@ function renderAllViews() {
 
 function renderProfileView() {
   const p = state.profile;
+  const preferences = p.preferences || DEFAULT_PROFILE.preferences;
 
   document.getElementById('input-gender').value = p.gender;
   document.getElementById('input-age').value = p.age;
@@ -318,6 +456,10 @@ function renderProfileView() {
   document.getElementById('input-height').value = p.height;
   document.getElementById('input-activity').value = p.activity;
   document.getElementById('input-goal').value = p.goal;
+  document.getElementById('input-diet').value = preferences.diet;
+  document.getElementById('input-cuisine').value = preferences.cuisine;
+  document.getElementById('input-budget').value = preferences.budget;
+  document.getElementById('input-avoid-foods').value = preferences.avoid;
 
   document.getElementById('res-bmr').textContent = `${p.bmr.toLocaleString()} kcal`;
   document.getElementById('res-tdee').textContent = `${p.tdee.toLocaleString()} kcal`;
@@ -378,6 +520,7 @@ function renderJournalView() {
             <div class="food-meta">
               <h4>${escapeHtml(item.name)}</h4>
               <p>${item.weight}g &bull; P: ${Math.round(item.prot)}g | G: ${Math.round(item.carb)}g | L: ${Math.round(item.fat)}g</p>
+              <p class="food-source">${escapeHtml(item.source || 'Source non renseignée')}</p>
             </div>
           </div>
           <div class="food-item-right">
@@ -426,11 +569,43 @@ function renderJournalView() {
   }
 
   if (document.getElementById('micro-sugar')) {
-    document.getElementById('micro-sugar').textContent = `${Math.round(totalCarb * 0.2)}g`;
-    document.getElementById('micro-sodium').textContent = `${Math.min(2300, Math.round(totalEatenCals * 0.9))}mg`;
-    document.getElementById('micro-potassium').textContent = `${Math.min(3500, Math.round(totalEatenCals * 1.2))}mg`;
-    document.getElementById('micro-iron').textContent = `${Math.min(18, Math.round(totalProt * 0.25))}mg`;
+    const microTotals = { sugar: 0, sodium: 0, potassium: 0, iron: 0 };
+    const microCoverage = { sugar: 0, sodium: 0, potassium: 0, iron: 0 };
+    const dayItemCount = mealCategories.reduce((count, category) =>
+      count + (dayMeals[category] || []).length, 0);
+    mealCategories.forEach(category => {
+      (dayMeals[category] || []).forEach(item => {
+        Object.keys(microTotals).forEach(key => {
+          const value = item.micros?.[key];
+          if (Number.isFinite(value)) {
+            microTotals[key] += value;
+            microCoverage[key] += 1;
+          }
+        });
+      });
+    });
+
+    document.getElementById('micro-sugar').textContent = microCoverage.sugar
+      ? `${microTotals.sugar.toFixed(1)}g` : 'Non disponible';
+    document.getElementById('micro-sodium').textContent = microCoverage.sodium
+      ? `${Math.round(microTotals.sodium)}mg` : 'Non disponible';
+    document.getElementById('micro-potassium').textContent = microCoverage.potassium
+      ? `${Math.round(microTotals.potassium)}mg` : 'Non disponible';
+    document.getElementById('micro-iron').textContent = microCoverage.iron
+      ? `${Math.round(microTotals.iron)}mg` : 'Non disponible';
+    Object.keys(microCoverage).forEach(key => {
+      document.getElementById(`micro-${key}-coverage`).textContent =
+        `${microCoverage[key]}/${dayItemCount} aliment(s) renseigné(s)`;
+    });
   }
+
+  renderMealRecommendations({
+    calories: totalEatenCals,
+    protein: totalProt,
+    carbs: totalCarb,
+    fat: totalFat,
+    fiber: totalFib
+  });
 }
 
 function updateMacroBar(macroKey, eatenVal, targetVal) {
@@ -445,6 +620,100 @@ function updateMacroBar(macroKey, eatenVal, targetVal) {
   const pct = Math.round((eatenVal / targetVal) * 100);
   barEl.style.width = `${Math.min(100, pct)}%`;
   pctEl.textContent = `${pct}% atteint`;
+}
+
+function renderMealRecommendations(consumed) {
+  const container = document.getElementById('meal-recommendations');
+  if (!container) return;
+
+  const profile = state.profile;
+  const preferences = profile.preferences || DEFAULT_PROFILE.preferences;
+  const remainingCals = Math.max(0, profile.targetCalories - consumed.calories);
+  const deficits = {
+    protein: Math.max(0, profile.macros.protein - consumed.protein),
+    carbs: Math.max(0, profile.macros.carbs - consumed.carbs),
+    fat: Math.max(0, profile.macros.fat - consumed.fat),
+    fiber: Math.max(0, profile.macros.fiber - consumed.fiber)
+  };
+  const avoided = preferences.avoid.split(',').map(normalizeFoodName).filter(Boolean);
+  const eligible = RECIPE_DATABASE.filter(recipe => {
+    if (preferences.diet === 'vegetarian' && recipe.diet !== 'vegetarian') return false;
+    if (preferences.diet === 'pescatarian' && !['vegetarian', 'pescatarian'].includes(recipe.diet)) return false;
+    if (preferences.cuisine === 'tunisian' && recipe.cuisine !== 'tunisian') return false;
+    const recipeWords = normalizeFoodName(`${recipe.name} ${recipe.ingredients.map(item => item.name).join(' ')}`);
+    if (avoided.some(term => recipeWords.includes(term))) return false;
+    return true;
+  }).map(recipe => {
+    const nutrition = getRecipeNutrition(recipe);
+    const calorieShare = remainingCals > 0
+      ? Math.min(1, nutrition.cals / remainingCals)
+      : 0;
+    const macroFit = [
+      [nutrition.prot, deficits.protein, 0.4],
+      [nutrition.carb, deficits.carbs, 0.2],
+      [nutrition.fat, deficits.fat, 0.15],
+      [nutrition.fib, deficits.fiber, 0.25]
+    ].reduce((score, [amount, deficit, weight]) => {
+      const targetForMeal = deficit * calorieShare;
+      const fit = targetForMeal > 0 ? Math.min(amount, targetForMeal) / targetForMeal : 0.5;
+      return score + fit * weight;
+    }, 0);
+    const calorieFit = remainingCals > 0
+      ? Math.max(0, 1 - Math.abs(nutrition.cals - Math.min(remainingCals, 600)) / Math.max(250, Math.min(remainingCals, 600)))
+      : 0;
+    const budgetFit = preferences.budget === 'economy'
+      ? (recipe.budget === 'economy' ? 0.12 : recipe.budget === 'premium' ? -0.2 : 0)
+      : preferences.budget === 'standard' && recipe.budget === 'premium' ? -0.08 : 0;
+    return {
+      recipe,
+      nutrition,
+      score: macroFit * 0.65 + calorieFit * 0.35 + budgetFit
+    };
+  }).filter(result => remainingCals > 0 && result.nutrition.cals <= remainingCals)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  container.innerHTML = `
+    <div class="recommendations-header">
+      <div>
+        <h3>Suggestions adaptées à votre journée</h3>
+        <p class="text-xs text-muted">Selon votre budget calorique, les macros restantes, vos préférences et les recettes disponibles.</p>
+      </div>
+      <div class="recommendations-controls">
+        <span class="recommendations-remaining">${Math.round(remainingCals)} kcal restantes</span>
+        <label for="recommendation-target-meal">Ajouter à :
+          <select id="recommendation-target-meal" class="form-input">
+            <option value="breakfast">Petit-déjeuner</option>
+            <option value="lunch">Déjeuner</option>
+            <option value="dinner">Dîner</option>
+            <option value="snack">Collation</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    ${eligible.length ? `<div class="recommendations-grid">${eligible.map(({ recipe, nutrition }) => `
+      <article class="recommendation-card">
+        <div class="recommendation-card-heading">
+          <h4>${escapeHtml(recipe.name)}</h4>
+          <span>${Math.round(nutrition.cals)} kcal</span>
+        </div>
+        <p class="recommendation-macros">P ${Math.round(nutrition.prot)}g · G ${Math.round(nutrition.carb)}g · L ${Math.round(nutrition.fat)}g · Fibres ${Math.round(nutrition.fib)}g</p>
+        <p class="food-source">${recipe.cuisine === 'tunisian' ? 'Recette tunisienne' : 'Recette équilibrée'} · quantités et huile modifiables dans le catalogue</p>
+        <button type="button" class="btn btn-sm btn-outline recommendation-add" data-recipe="${recipe.id}">Ajouter au journal</button>
+      </article>
+    `).join('')}</div>` : `<p class="text-xs text-muted recommendation-empty">${remainingCals > 0 ? 'Aucune recette disponible ne correspond à ces préférences et à votre budget calorique restant.' : 'Votre objectif calorique est atteint. Modifiez votre journal ou consultez les suggestions un autre jour.'}</p>`}
+  `;
+
+  document.getElementById('recommendation-target-meal').value = state.selectedMealTarget;
+  document.getElementById('recommendation-target-meal').addEventListener('change', event => {
+    state.selectedMealTarget = event.target.value;
+  });
+  container.querySelectorAll('.recommendation-add').forEach(button => {
+    button.addEventListener('click', () => {
+      const recipe = RECIPE_DATABASE.find(item => item.id === button.dataset.recipe);
+      if (recipe) addRecipeToMeal(recipe);
+    });
+  });
 }
 
 // WATER TRACKER WIDGET
@@ -717,10 +986,26 @@ function initProfileForm() {
 
     const newProfile = {
       gender, age, weight, height, activity, goal,
+      preferences: state.profile.preferences,
       ...computed
     };
 
     saveProfile(newProfile);
+  });
+
+  const preferencesForm = document.getElementById('preferences-form');
+  preferencesForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(preferencesForm);
+    state.profile.preferences = {
+      diet: formData.get('diet'),
+      cuisine: formData.get('cuisine'),
+      budget: formData.get('budget'),
+      avoid: document.getElementById('input-avoid-foods').value.trim()
+    };
+    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(state.profile));
+    renderJournalView();
+    showToast('Préférences enregistrées. Vos suggestions sont actualisées.');
   });
 
   document.getElementById('btn-recalc-sidebar').addEventListener('click', () => switchView('profile'));
@@ -952,6 +1237,7 @@ function initAIScanner() {
         startAIAnalysisProcess(presetData.image, {
           ...presetData,
           isDemo: true,
+          source: 'Démonstration — valeurs prédéfinies',
           confidence: null,
           advice: `Démonstration uniquement : ces valeurs sont prédéfinies et ne proviennent pas d'une analyse IA. ${presetData.advice}`
         });
@@ -1377,8 +1663,8 @@ async function analyzeWithGeminiDirect(imageBase64Url, apiKey) {
   const mimeType = match[1];
   const base64Data = match[2];
 
-  const prompt = `Tu es un expert nutritionniste et vision par ordinateur. Analyse cette photo de repas.
-Identifie précisément chaque aliment visible et estime sa portion en grammes.
+  const prompt = `Analyse cette photo de repas sans prétendre à une précision impossible.
+Identifie les aliments réellement visibles et estime leur portion en grammes. N'invente pas les ingrédients cachés (huile, sauces ou garnitures) ; indique clairement que leur absence ne peut pas être vérifiée depuis la photo.
 Pour chaque aliment, fournis :
 - name : nom de l'aliment en français
 - grams : poids estimé en grammes (nombre)
@@ -1393,13 +1679,12 @@ Fournis aussi :
 - title : nom résumé du repas (ex: "Saumon grillé et riz basmati")
 - advice : conseil nutritionnel bienveillant et analyse
 - nutriScore : "A", "B", "C", "D" ou "E"
-- confidence : niveau de confiance entre 88 et 99
+- confidence : ne pas fournir de pourcentage de confiance
 
+Une image seule ne permet pas de connaître exactement le poids ni la recette. Indique dans advice que les valeurs sont des estimations à corriger et confirmer par l'utilisateur.
 Réponds UNIQUEMENT en JSON strict avec cette structure :
 {
   "title": "Nom du plat",
-  "confidence": 95,
-  "nutriScore": "A",
   "advice": "Conseil...",
   "items": [
     { "name": "Aliment", "grams": 150, "caloriesPer100g": 120, "proteinPer100g": 20, "carbPer100g": 0, "fatPer100g": 4, "fiberPer100g": 0, "bbox": { "top": 20, "left": 15, "width": 40, "height": 35 } }
@@ -1450,10 +1735,11 @@ Réponds UNIQUEMENT en JSON strict avec cette structure :
       return {
         title: parsed.title || "Repas Analysé par Gemini",
         advice: parsed.advice || "Analyse multimodale effectuée en direct via Google Gemini.",
-        confidence: parsed.confidence || 95,
+        confidence: null,
         nutriScore: parsed.nutriScore || 'A',
         analysisAvailable: true,
         isGemini: true,
+        source: 'Estimation visuelle Gemini — à confirmer',
         items: parsed.items.map(i => ({
           name: String(i.name || 'Aliment').slice(0, 80),
           grams: Math.max(5, Math.round(Number(i.grams) || 100)),
@@ -1491,8 +1777,8 @@ async function startAIAnalysisProcess(imageSrc, aiResultData) {
 
   const statusTitle = document.getElementById('scan-status-title');
   const statusSub = document.getElementById('scan-status-sub');
-  statusTitle.textContent = "Analyse optique & détection des composants...";
-  statusSub.textContent = "Extraction de la palette spectrale et des textures...";
+  statusTitle.textContent = "Recherche d’un moteur d’analyse...";
+  statusSub.textContent = "Les portions calculées à partir d’une photo restent des estimations à confirmer.";
 
   let finalAnalysis = null;
   const userGeminiKey = (localStorage.getItem(STORAGE_KEYS.GEMINI_KEY) || '').trim();
@@ -1528,12 +1814,10 @@ async function startAIAnalysisProcess(imageSrc, aiResultData) {
     }
   }
 
-  // Tier 3: Computer Vision Optical Color & Spatial Analyzer
   if (!finalAnalysis) {
-    statusTitle.textContent = "Segmentation des aliments & calcul des portions...";
-    statusSub.textContent = "Estimation des densités caloriques et macronutriments...";
-    await new Promise(r => setTimeout(r, 900));
-    finalAnalysis = await analyzeImageLocally(imageSrc);
+    finalAnalysis = createUnavailablePhotoResult(
+      'Aucune analyse fiable n’est disponible. Une photo seule ne permet pas de confirmer les ingrédients, l’huile ni le poids. Configurez Gemini, ou ajoutez les aliments manuellement.'
+    );
   }
 
   state.currentScannedMealData = {
@@ -1550,7 +1834,9 @@ function renderAIScanResults() {
   if (!data) return;
 
   document.getElementById('res-final-img').src = data.imageSrc;
-  document.getElementById('res-ai-confidence').textContent = data.isDemo ? 'Démo' : data.confidence == null ? 'Estimé' : `${data.confidence}%`;
+  document.getElementById('res-ai-confidence').textContent = data.isDemo
+    ? 'Données de démonstration'
+    : data.source || (data.analysisAvailable ? 'Estimation IA à vérifier' : 'Aucune analyse');
   document.getElementById('res-ai-advice').textContent = data.advice;
 
   const scoreBadge = document.getElementById('meal-nutriscore-badge');
@@ -1599,34 +1885,26 @@ function renderDetectedItemsList() {
   container.innerHTML = '';
 
   if (!state.currentScannedMealData.items || !state.currentScannedMealData.items.length) {
-    container.innerHTML = '<p class="text-muted scanner-unavailable">Aucun aliment ni nutriment n’a été estimé. Cadrez à nouveau le plat ou ajoutez un aliment manuellement.</p>';
+    container.innerHTML = `
+      <p class="text-muted scanner-unavailable">${escapeHtml(state.currentScannedMealData.advice)}</p>
+      <button type="button" class="btn btn-outline scanner-manual-add">Ajouter les aliments manuellement</button>
+    `;
     document.getElementById('res-total-cals').innerHTML = `0 <small>kcal</small>`;
     document.getElementById('res-total-prot').textContent = `0g`;
     document.getElementById('res-total-carb').textContent = `0g`;
     document.getElementById('res-total-fat').textContent = `0g`;
     document.getElementById('res-total-fib').textContent = `0g`;
+    container.querySelector('.scanner-manual-add').addEventListener('click', () => {
+      const targetMeal = document.getElementById('select-target-meal').value;
+      closeAllModals();
+      openManualAddModal(targetMeal);
+    });
     return;
   }
-
-  let totalCals = 0;
-  let totalProt = 0;
-  let totalCarb = 0;
-  let totalFat = 0;
-  let totalFib = 0;
 
   state.currentScannedMealData.items.forEach((item, index) => {
     const factor = item.grams / 100;
     const cals = Math.round(item.calsPer100g * factor);
-    const prot = Math.round((item.protPer100g * factor) * 10) / 10;
-    const carb = Math.round((item.carbPer100g * factor) * 10) / 10;
-    const fat = Math.round((item.fatPer100g * factor) * 10) / 10;
-    const fib = Math.round((item.fibPer100g * factor) * 10) / 10;
-
-    totalCals += cals;
-    totalProt += prot;
-    totalCarb += carb;
-    totalFat += fat;
-    totalFib += fib;
 
     const card = document.createElement('div');
     card.className = 'item-adjust-card';
@@ -1636,9 +1914,9 @@ function renderDetectedItemsList() {
         <span class="cals-badge">${cals} kcal</span>
       </div>
       <div class="item-slider-row">
-        <input type="range" class="gram-slider" min="10" max="400" step="5" value="${item.grams}" data-index="${index}" />
+        <input type="range" class="gram-slider" min="1" max="${Math.max(400, item.grams * 2)}" step="1" value="${item.grams}" data-index="${index}" aria-label="Ajuster la portion de ${escapeHtml(item.name)}" />
         <div class="gram-input-box">
-          <input type="number" class="form-input text-xs gram-num-input" value="${item.grams}" data-index="${index}" min="0" max="1000" />
+          <input type="number" class="form-input text-xs gram-num-input" value="${item.grams}" data-index="${index}" min="1" max="5000" inputmode="numeric" aria-label="Quantité en grammes de ${escapeHtml(item.name)}" />
         </div>
         <span class="text-xs text-muted">g</span>
       </div>
@@ -1646,22 +1924,42 @@ function renderDetectedItemsList() {
     container.appendChild(card);
   });
 
-  document.getElementById('res-total-cals').innerHTML = `${totalCals} <small>kcal</small>`;
-  document.getElementById('res-total-prot').textContent = `${Math.round(totalProt)}g`;
-  document.getElementById('res-total-carb').textContent = `${Math.round(totalCarb)}g`;
-  document.getElementById('res-total-fat').textContent = `${Math.round(totalFat)}g`;
-  document.getElementById('res-total-fib').textContent = `${Math.round(totalFib)}g`;
-
   container.querySelectorAll('.gram-slider, .gram-num-input').forEach(input => {
-    input.addEventListener('input', (e) => {
+    input.addEventListener(input.type === 'range' ? 'input' : 'change', (e) => {
       const idx = parseInt(e.target.getAttribute('data-index'));
-      const newGrams = Math.max(0, parseInt(e.target.value) || 0);
+      const newGrams = Math.min(5000, Math.max(1, parseInt(e.target.value) || 1));
       state.currentScannedMealData.items[idx].grams = newGrams;
 
+      const card = e.target.closest('.item-adjust-card');
+      card.querySelector('.gram-slider').value = newGrams;
+      card.querySelector('.gram-slider').max = Math.max(400, newGrams * 2);
+      card.querySelector('.gram-num-input').value = newGrams;
+      card.querySelector('.cals-badge').textContent =
+        `${Math.round(state.currentScannedMealData.items[idx].calsPer100g * newGrams / 100)} kcal`;
       renderBoundingBoxes(state.currentScannedMealData.items);
-      renderDetectedItemsList();
+      updateScannedMealTotals();
     });
   });
+
+  updateScannedMealTotals();
+}
+
+function updateScannedMealTotals() {
+  const totals = state.currentScannedMealData.items.reduce((sum, item) => {
+    const factor = item.grams / 100;
+    sum.cals += Math.round(item.calsPer100g * factor);
+    sum.prot += item.protPer100g * factor;
+    sum.carb += item.carbPer100g * factor;
+    sum.fat += item.fatPer100g * factor;
+    sum.fib += item.fibPer100g * factor;
+    return sum;
+  }, { cals: 0, prot: 0, carb: 0, fat: 0, fib: 0 });
+
+  document.getElementById('res-total-cals').innerHTML = `${totals.cals} <small>kcal</small>`;
+  document.getElementById('res-total-prot').textContent = `${Math.round(totals.prot)}g`;
+  document.getElementById('res-total-carb').textContent = `${Math.round(totals.carb)}g`;
+  document.getElementById('res-total-fat').textContent = `${Math.round(totals.fat)}g`;
+  document.getElementById('res-total-fib').textContent = `${Math.round(totals.fib)}g`;
 }
 
 function saveCurrentScannedMealToJournal() {
@@ -1704,7 +2002,8 @@ function saveCurrentScannedMealToJournal() {
     carb: Math.round(totalCarb),
     fat: Math.round(totalFat),
     fib: Math.round(totalFib),
-    thumb: '📸'
+    thumb: '📸',
+    source: data.source || 'Estimation photo IA — à confirmer'
   };
 
   state.meals[today][targetMealCat].push(newMealItem);
@@ -1788,16 +2087,25 @@ function parseNaturalTextMeal(textPrompt) {
 // MANUAL FOOD DB SEARCH ENGINE
 function openManualAddModal(targetMeal) {
   state.selectedMealTarget = targetMeal;
+  state.foodScope = 'all';
+  document.getElementById('input-food-search').value = '';
+  document.querySelectorAll('[data-food-scope]').forEach(button =>
+    button.classList.toggle('active', button.dataset.foodScope === 'all'));
   document.getElementById('modal-manual-add').classList.add('active');
-  renderFoodDBList(FOOD_DATABASE);
+  renderManualFoodCatalog();
 }
 
 function initFoodSearch() {
   const searchInput = document.getElementById('input-food-search');
-  searchInput.addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    const filtered = FOOD_DATABASE.filter(f => f.name.toLowerCase().includes(q));
-    renderFoodDBList(filtered);
+  searchInput.addEventListener('input', renderManualFoodCatalog);
+
+  document.querySelectorAll('[data-food-scope]').forEach(button => {
+    button.addEventListener('click', () => {
+      state.foodScope = button.dataset.foodScope;
+      document.querySelectorAll('[data-food-scope]').forEach(tab =>
+        tab.classList.toggle('active', tab === button));
+      renderManualFoodCatalog();
+    });
   });
 
   document.getElementById('btn-lookup-barcode').addEventListener('click', lookupFoodBarcode);
@@ -1820,6 +2128,98 @@ function initFoodSearch() {
 
     closeAllModals();
     customForm.reset();
+  });
+}
+
+function renderManualFoodCatalog() {
+  const query = normalizeFoodName(document.getElementById('input-food-search').value);
+  const foods = getUniqueFoodDatabase().filter(food => {
+    const matchesScope = state.foodScope !== 'tunisian' || food.cuisine === 'tunisian';
+    return matchesScope && normalizeFoodName(food.name).includes(query);
+  });
+  renderFoodDBList(foods);
+  renderRecipeList(query);
+}
+
+function renderRecipeList(query = '') {
+  const container = document.getElementById('recipe-db-list');
+  const matchingRecipes = RECIPE_DATABASE.filter(recipe => {
+    const matchesScope = state.foodScope !== 'tunisian' || recipe.cuisine === 'tunisian';
+    return matchesScope && normalizeFoodName(recipe.name).includes(query);
+  });
+  container.innerHTML = matchingRecipes.length
+    ? matchingRecipes.map(recipe => {
+        const nutrition = getRecipeNutrition(recipe);
+        return `
+          <article class="recipe-db-card" data-recipe-card="${recipe.id}">
+            <div class="recipe-db-heading">
+              <div>
+                <h4>${escapeHtml(recipe.name)}</h4>
+                <span class="text-xs text-muted">${Math.round(nutrition.cals)} kcal estimées par portion · modifiez l’huile selon la préparation</span>
+              </div>
+              <strong class="recipe-db-total">${Math.round(nutrition.cals)} kcal</strong>
+            </div>
+            <div class="recipe-ingredients-grid">
+              ${recipe.ingredients.map((ingredient, index) => `
+                <label>${escapeHtml(ingredient.name)}
+                  <input type="number" min="0" max="2000" step="1" value="${ingredient.grams}" inputmode="numeric" data-recipe="${recipe.id}" data-ingredient="${index}" aria-label="${escapeHtml(ingredient.name)} en grammes" />
+                  <span>g</span>
+                </label>
+              `).join('')}
+            </div>
+            <p class="food-source">Calcul estimatif depuis les ingrédients renseignés ; recette, cuisson et quantité d’huile varient.</p>
+            <button type="button" class="btn btn-sm btn-outline recipe-add" data-recipe="${recipe.id}">Ajouter cette portion</button>
+          </article>
+        `;
+      }).join('')
+    : '<p class="text-xs text-muted">Aucune recette correspondante.</p>';
+
+  container.querySelectorAll('[data-recipe][data-ingredient]').forEach(input => {
+    input.addEventListener('input', () => {
+      const recipe = RECIPE_DATABASE.find(item => item.id === input.dataset.recipe);
+      const card = input.closest('.recipe-db-card');
+      const amounts = recipe.ingredients.map((ingredient, index) => {
+        const amountInput = card.querySelector(`[data-ingredient="${index}"]`);
+        return Math.min(2000, Math.max(0, Number(amountInput.value) || 0));
+      });
+      const nutrition = getRecipeNutrition(recipe, amounts);
+      card.querySelector('.recipe-db-total').textContent = `${Math.round(nutrition.cals)} kcal`;
+    });
+  });
+
+  container.querySelectorAll('.recipe-add').forEach(button => {
+    button.addEventListener('click', () => {
+      const recipe = RECIPE_DATABASE.find(item => item.id === button.dataset.recipe);
+      const card = button.closest('.recipe-db-card');
+      const amounts = recipe.ingredients.map((ingredient, index) =>
+        Math.min(2000, Math.max(0, Number(card.querySelector(`[data-ingredient="${index}"]`).value) || 0)));
+      if (amounts.some(grams => grams < 1)) {
+        showToast('Chaque ingrédient doit avoir une quantité supérieure à 0 g.');
+        return;
+      }
+      addRecipeToMeal(recipe, amounts);
+      closeAllModals();
+    });
+  });
+}
+
+function addRecipeToMeal(recipe, gramsByIngredient) {
+  const nutrition = getRecipeNutrition(recipe, gramsByIngredient);
+  addFoodItemToMeal({
+    id: `${recipe.id}-${Date.now()}`,
+    name: recipe.name,
+    weight: Math.round(nutrition.weight),
+    cals: Math.round(nutrition.cals),
+    prot: Math.round(nutrition.prot * 10) / 10,
+    carb: Math.round(nutrition.carb * 10) / 10,
+    fat: Math.round(nutrition.fat * 10) / 10,
+    fib: Math.round(nutrition.fib * 10) / 10,
+    thumb: recipe.cuisine === 'tunisian' ? '🇹🇳' : '🍽️',
+    source: 'Calcul estimatif par ingrédients — recette modifiable',
+    ingredients: recipe.ingredients.map((ingredient, index) => ({
+      name: ingredient.name,
+      grams: gramsByIngredient ? gramsByIngredient[index] : ingredient.grams
+    }))
   });
 }
 
@@ -1855,7 +2255,13 @@ async function lookupFoodBarcode() {
       prot: readNutrient(nutrition.proteins_100g),
       carb: readNutrient(nutrition.carbohydrates_100g),
       fat: readNutrient(nutrition.fat_100g),
-      fib: readNutrient(nutrition.fiber_100g)
+      fib: readNutrient(nutrition.fiber_100g),
+      microsPer100g: {
+        sugar: readNutrient(nutrition.sugars_100g),
+        sodium: readNutrient(nutrition.sodium_100g) * 1000,
+        potassium: readNutrient(nutrition.potassium_100g),
+        iron: readNutrient(nutrition.iron_100g)
+      }
     };
 
     if (!Number.isFinite(nutrients.cals) || !['prot', 'carb', 'fat', 'fib'].every(key => Number.isFinite(nutrients[key]))) {
@@ -1863,7 +2269,7 @@ async function lookupFoodBarcode() {
     }
 
     const name = [product.product_name_fr || product.product_name, product.brands].filter(Boolean).join(' - ');
-    renderBarcodeProduct({ name: name || `Produit ${barcode}`, ...nutrients });
+    renderBarcodeProduct({ name: name || `Produit ${barcode}`, barcode, ...nutrients });
     status.textContent = 'Produit trouvé. Entrez la quantité consommée et vérifiez les valeurs avec l’étiquette.';
   } catch (error) {
     status.textContent = error.message || 'Impossible de rechercher ce produit.';
@@ -1907,7 +2313,12 @@ function renderBarcodeProduct(product) {
       carb: Math.round(product.carb * factor * 10) / 10,
       fat: Math.round(product.fat * factor * 10) / 10,
       fib: Math.round(product.fib * factor * 10) / 10,
-      thumb: '🏷️'
+      thumb: '🏷️',
+      source: 'Open Food Facts — fiche produit',
+      sourceId: product.barcode,
+      micros: Object.fromEntries(Object.entries(product.microsPer100g)
+        .filter(([, value]) => Number.isFinite(value))
+        .map(([key, value]) => [key, value * factor]))
     });
     closeAllModals();
   });
@@ -1931,6 +2342,7 @@ function renderFoodDBList(items) {
       <div>
         <strong style="font-size: 0.88rem;">${escapeHtml(item.name)}</strong>
         <div class="text-xs text-muted">pour 100g &bull; P:${item.prot}g G:${item.carb}g L:${item.fat}g</div>
+        <div class="food-source">${escapeHtml(item.source || 'Base locale — valeurs moyennes indicatives')}</div>
       </div>
       <button class="btn btn-sm btn-outline">+ ${item.cals} kcal</button>
     `;
@@ -1945,7 +2357,8 @@ function renderFoodDBList(items) {
         carb: item.carb,
         fat: item.fat,
         fib: item.fib,
-        thumb: '🥗'
+        thumb: '🥗',
+        source: 'Base locale NutriVision — valeurs indicatives'
       });
       closeAllModals();
     });
@@ -1962,7 +2375,10 @@ function addFoodItemToMeal(foodObj) {
     state.meals[today] = { breakfast: [], lunch: [], dinner: [], snack: [] };
   }
 
-  state.meals[today][targetMeal].push(foodObj);
+  state.meals[today][targetMeal].push({
+    ...foodObj,
+    source: foodObj.source || 'Saisie manuelle — valeurs fournies par l’utilisateur'
+  });
   saveMeals();
   showToast(`"${foodObj.name}" ajouté à votre journal !`);
 }

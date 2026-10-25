@@ -281,18 +281,28 @@
             <!-- Micro-Nutrients Collapsible Accordion -->
             <div class="micro-nutrients-row mt-3">
               <button id="btn-toggle-micros" class="btn btn-sm btn-ghost text-xs">
-                <span>📊 Micronutriments (Sodium, Sucre, Potassium, Fer)</span>
+                <span>📊 Micronutriments disponibles</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
               </button>
               <div id="micros-panel" class="micros-panel hidden">
                 <div class="micros-grid mt-2">
-                  <div class="micro-item"><span>Sucres Rapides</span><strong id="micro-sugar">0g</strong> / max 35g</div>
-                  <div class="micro-item"><span>Sodium</span><strong id="micro-sodium">0mg</strong> / 2,300mg</div>
-                  <div class="micro-item"><span>Potassium</span><strong id="micro-potassium">0mg</strong> / 3,500mg</div>
-                  <div class="micro-item"><span>Fer & Vit C</span><strong id="micro-iron">0mg</strong> / 18mg</div>
+                  <div class="micro-item"><span>Sucres</span><strong id="micro-sugar">Non disponible</strong><small id="micro-sugar-coverage">0 aliment</small></div>
+                  <div class="micro-item"><span>Sodium</span><strong id="micro-sodium">Non disponible</strong><small id="micro-sodium-coverage">0 aliment</small></div>
+                  <div class="micro-item"><span>Potassium</span><strong id="micro-potassium">Non disponible</strong><small id="micro-potassium-coverage">0 aliment</small></div>
+                  <div class="micro-item"><span>Fer</span><strong id="micro-iron">Non disponible</strong><small id="micro-iron-coverage">0 aliment</small></div>
                 </div>
+                <p class="text-xs text-muted mt-2">Seules les fiches fournissant ces valeurs sont additionnées ; les données manquantes ne sont pas estimées.</p>
               </div>
             </div>
+
+            <section id="meal-recommendations" class="recommendations-panel mt-3" aria-live="polite">
+              <div class="recommendations-header">
+                <div>
+                  <h3>Suggestions adaptées à votre journée</h3>
+                  <p class="text-xs text-muted">Des repas selon vos objectifs, vos préférences et ce qu’il vous reste à consommer.</p>
+                </div>
+              </div>
+            </section>
 
           </div>
 
@@ -441,6 +451,7 @@
               </div>
             </div>
           </div>
+
         </section>
 
         <!-- VIEW 3: PROFILE & BMR / BODY FAT CALCULATOR -->
@@ -563,6 +574,45 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="card-glass preference-card mt-4">
+            <h3>Préférences alimentaires & budget</h3>
+            <p class="text-xs text-muted mb-3">Ces choix filtrent les suggestions. Les ingrédients à éviter sont séparés par des virgules.</p>
+            <form id="preferences-form">
+              <div class="form-row duo">
+                <div class="form-group">
+                  <label for="input-diet">Régime alimentaire</label>
+                  <select id="input-diet" name="diet" class="form-input">
+                    <option value="all">Aucun régime particulier</option>
+                    <option value="vegetarian">Végétarien</option>
+                    <option value="pescatarian">Pescétarien</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="input-cuisine">Cuisine souhaitée</label>
+                  <select id="input-cuisine" name="cuisine" class="form-input">
+                    <option value="any">Toutes les cuisines</option>
+                    <option value="tunisian">Tunisienne uniquement</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row duo">
+                <div class="form-group">
+                  <label for="input-budget">Budget repas</label>
+                  <select id="input-budget" name="budget" class="form-input">
+                    <option value="economy">Économique</option>
+                    <option value="standard">Standard</option>
+                    <option value="premium">Sans préférence de budget</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="input-avoid-foods">Ingrédients à éviter</label>
+                  <input id="input-avoid-foods" class="form-input" type="text" placeholder="Ex. thon, merguez" />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary mt-3">Enregistrer mes préférences</button>
+            </form>
           </div>
         </section>
 
@@ -735,7 +785,7 @@
 
                   <div class="ai-confidence-badge">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Confiance IA : <strong id="res-ai-confidence">--%</strong></span>
+                    <span>Analyse : <strong id="res-ai-confidence">--</strong></span>
                   </div>
                 </div>
 
@@ -775,7 +825,7 @@
 
                 <h4 class="mt-3 mb-2 flex items-center justify-between">
                   <span>Aliments Décelés & Portions (Ajustables)</span>
-                  <small class="text-muted text-xs">Modifiez les grammes pour 100% de précision</small>
+                  <small class="text-muted text-xs">Corrigez les estimations avant de confirmer</small>
                 </h4>
 
                 <div id="ai-detected-items-list" class="detected-items-list">
@@ -855,6 +905,17 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input type="text" id="input-food-search" placeholder="Rechercher (ex: Pomme, Poulet, Avocat, Riz...)" class="form-input search-input" />
           </div>
+
+          <div class="food-scope-tabs mb-3" role="group" aria-label="Filtrer le catalogue">
+            <button type="button" class="btn btn-sm btn-outline active" data-food-scope="all">Tous les aliments & recettes</button>
+            <button type="button" class="btn btn-sm btn-outline" data-food-scope="tunisian">Cuisine tunisienne</button>
+          </div>
+
+          <section class="recipe-catalog-section mb-3">
+            <h4 class="mb-2">Recettes calculées par ingrédients</h4>
+            <p class="text-xs text-muted mb-2">Ajustez les grammes, notamment l’huile et la préparation, avant d’ajouter au journal.</p>
+            <div id="recipe-db-list" class="recipe-db-list"></div>
+          </section>
 
           <div class="barcode-lookup mb-3">
             <label for="input-food-barcode">Produit emballé : code-barres</label>
