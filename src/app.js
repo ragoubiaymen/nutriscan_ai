@@ -1694,8 +1694,7 @@ Réponds UNIQUEMENT en JSON strict avec cette structure :
 }`;
 
   const endpoints = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(apiKey)}`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(apiKey)}`
   ];
 
   let lastError = null;
@@ -1783,6 +1782,7 @@ async function startAIAnalysisProcess(imageSrc, aiResultData) {
   statusSub.textContent = "Les portions calculées à partir d’une photo restent des estimations à confirmer.";
 
   let finalAnalysis = null;
+  let analysisFailureMessage = '';
   const userGeminiKey = (localStorage.getItem(STORAGE_KEYS.GEMINI_KEY) || '').trim();
 
   // Tier 1: Direct Gemini API if configured
@@ -1805,20 +1805,21 @@ async function startAIAnalysisProcess(imageSrc, aiResultData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageDataUrl: imageSrc })
       });
-      if (res.ok) {
-        const result = await res.json();
-        if (result.analysisAvailable && Array.isArray(result.items) && result.items.length > 0) {
-          finalAnalysis = result;
-        }
+      const result = await res.json();
+      if (res.ok && result.analysisAvailable && Array.isArray(result.items) && result.items.length > 0) {
+        finalAnalysis = result;
+      } else {
+        analysisFailureMessage = result.error || 'Le service d’analyse n’a pas retourné de résultat.';
       }
-    } catch (e) {
-      // Local or offline
+    } catch (error) {
+      console.error('Photo analysis service request failed:', error);
+      analysisFailureMessage = 'Impossible de joindre le service d’analyse. Vérifiez votre connexion puis réessayez.';
     }
   }
 
   if (!finalAnalysis) {
     finalAnalysis = createUnavailablePhotoResult(
-      'Aucune analyse fiable n’est disponible. Une photo seule ne permet pas de confirmer les ingrédients, l’huile ni le poids. Configurez Gemini, ou ajoutez les aliments manuellement.'
+      `${analysisFailureMessage || 'Aucune analyse fiable n’est disponible.'} Une photo ne permet pas de confirmer les ingrédients cachés ni le poids exact. Réessayez ou ajoutez les aliments manuellement.`
     );
   }
 

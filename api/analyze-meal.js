@@ -1,5 +1,6 @@
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
 const MAX_IMAGE_BASE64_LENGTH = 4_000_000;
+const MAX_GEMINI_ATTEMPTS = 2;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -27,27 +28,34 @@ export default async function handler(req, res) {
   const prompt = `Analyse cette photo de repas. Identifie uniquement les aliments réellement visibles et estime leurs portions comestibles en grammes. À partir de tables nutritionnelles usuelles, estime les calories et macros de chaque aliment. Une image ne permet pas de connaître exactement le poids ou les ingrédients cachés : indique clairement dans advice qu'il s'agit d'estimations à vérifier, ne prétends pas à une précision certaine. Si aucun aliment n'est identifiable, retourne items vide. Réponds uniquement avec un JSON ayant cette structure : {"title":"nom bref du repas","advice":"limites et conseil","items":[{"name":"aliment","grams":150,"caloriesPer100g":120,"proteinPer100g":3,"carbPer100g":27,"fatPer100g":1,"fiberPer100g":2}]}. Les champs nutritionnels sont des nombres pour 100 g.`;
 
   try {
-    const geminiResponse = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: imageMatch[1], data: imageMatch[2] } }
-          ]
-        }],
-        generationConfig: { responseMimeType: 'application/json' }
-      })
+    const requestBody = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inline_data: { mime_type: imageMatch[1], data: imageMatch[2] } }
+        ]
+      }],
+      generationConfig: { responseMimeType: 'application/json' }
     });
+    let geminiResponse;
+    for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt += 1) {
+      geminiResponse = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody
+      });
+      if (![429, 503].includes(geminiResponse.status) || attempt === MAX_GEMINI_ATTEMPTS - 1) break;
+      await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+    }
 
     if (!geminiResponse.ok) {
       const errorBody = await geminiResponse.json().catch(() => ({}));
       const providerMessage = errorBody.error?.message;
-      const status = geminiResponse.status === 429 ? 503 : 502;
+      const isOverloaded = [429, 503].includes(geminiResponse.status);
+      const status = isOverloaded ? 503 : 502;
       return res.status(status).json({
-        error: geminiResponse.status === 429
-          ? 'Limite de requêtes Gemini atteinte. Réessayez plus tard.'
+        error: isOverloaded
+          ? 'Le service d’analyse photo est temporairement très sollicité. Réessayez dans quelques instants.'
           : 'Le service Gemini n’a pas pu analyser cette photo. Vérifiez sa configuration dans Vercel.',
         detail: typeof providerMessage === 'string' ? providerMessage.slice(0, 240) : undefined
       });
