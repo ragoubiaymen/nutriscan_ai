@@ -1,6 +1,6 @@
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash'];
 const MAX_IMAGE_BASE64_LENGTH = 4_000_000;
-const MAX_GEMINI_ATTEMPTS = 2;
+const MAX_PRIMARY_MODEL_ATTEMPTS = 2;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -38,14 +38,18 @@ export default async function handler(req, res) {
       generationConfig: { responseMimeType: 'application/json' }
     });
     let geminiResponse;
-    for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt += 1) {
-      geminiResponse = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: requestBody
-      });
-      if (![429, 503].includes(geminiResponse.status) || attempt === MAX_GEMINI_ATTEMPTS - 1) break;
-      await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+    for (const [modelIndex, model] of GEMINI_MODELS.entries()) {
+      const attempts = modelIndex === 0 ? MAX_PRIMARY_MODEL_ATTEMPTS : 1;
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
+        geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: requestBody
+        });
+        if (![429, 503].includes(geminiResponse.status)) break;
+        if (attempt < attempts - 1) await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      if (geminiResponse.ok || ![429, 503].includes(geminiResponse.status)) break;
     }
 
     if (!geminiResponse.ok) {
