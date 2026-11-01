@@ -404,7 +404,9 @@ function estimateBodyFatPct(gender, age, weightKg, heightCm) {
 }
 
 function normalizeFoodName(name) {
-  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[œŒ]/g, 'oe').replace(/[æÆ]/g, 'ae')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
 function getUniqueFoodDatabase() {
@@ -2143,6 +2145,8 @@ function renderManualFoodCatalog() {
 
 function renderRecipeList(query = '') {
   const container = document.getElementById('recipe-db-list');
+  const formatNutrition = nutrition =>
+    `${Math.round(nutrition.cals)} kcal · P ${Math.round(nutrition.prot)} g · G ${Math.round(nutrition.carb)} g · L ${Math.round(nutrition.fat)} g · Fibres ${Math.round(nutrition.fib)} g · ${Math.round(nutrition.weight)} g`;
   const matchingRecipes = RECIPE_DATABASE.filter(recipe => {
     const matchesScope = state.foodScope !== 'tunisian' || recipe.cuisine === 'tunisian';
     return matchesScope && normalizeFoodName(recipe.name).includes(query);
@@ -2155,10 +2159,11 @@ function renderRecipeList(query = '') {
             <div class="recipe-db-heading">
               <div>
                 <h4>${escapeHtml(recipe.name)}</h4>
-                <span class="text-xs text-muted">${Math.round(nutrition.cals)} kcal estimées par portion · modifiez l’huile selon la préparation</span>
+                <span class="text-xs text-muted">Estimation calculée selon les quantités d’ingrédients</span>
               </div>
               <strong class="recipe-db-total">${Math.round(nutrition.cals)} kcal</strong>
             </div>
+            <p class="recipe-nutrition-preview">${formatNutrition(nutrition)}</p>
             <div class="recipe-ingredients-grid">
               ${recipe.ingredients.map((ingredient, index) => `
                 <label>${escapeHtml(ingredient.name)}
@@ -2184,6 +2189,7 @@ function renderRecipeList(query = '') {
       });
       const nutrition = getRecipeNutrition(recipe, amounts);
       card.querySelector('.recipe-db-total').textContent = `${Math.round(nutrition.cals)} kcal`;
+      card.querySelector('.recipe-nutrition-preview').textContent = formatNutrition(nutrition);
     });
   });
 
@@ -2358,7 +2364,7 @@ function renderFoodDBList(items) {
         fat: item.fat,
         fib: item.fib,
         thumb: '🥗',
-        source: 'Base locale NutriVision — valeurs indicatives'
+        source: item.source || 'Base locale NutriVision — valeurs indicatives'
       });
       closeAllModals();
     });

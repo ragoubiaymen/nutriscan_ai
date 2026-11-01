@@ -795,6 +795,7 @@ h1, h2, h3, h4, .font-display {
 .recipe-db-card { display: flex; flex-direction: column; gap: 0.5rem; }
 .recipe-db-heading h4 { font-size: 0.85rem; }
 .recipe-db-heading strong { color: var(--emerald-primary); font-size: 0.78rem; white-space: nowrap; }
+.recipe-nutrition-preview { color: var(--text-muted); font-size: 0.7rem; }
 .recipe-ingredients-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
 .recipe-ingredients-grid label { display: grid; grid-template-columns: minmax(0, 1fr) 58px 12px; align-items: center; gap: 0.3rem; color: var(--text-muted); font-size: 0.68rem; }
 .recipe-ingredients-grid input { min-width: 0; width: 100%; background: var(--bg-dark); border: 1px solid var(--border-glass); border-radius: 6px; padding: 0.3rem; color: var(--text-main); }
