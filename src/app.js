@@ -32,6 +32,8 @@ const DEFAULT_PROFILE = {
   },
   preferences: { diet: 'all', cuisine: 'any', budget: 'standard', avoid: '' }
 };
+const MAX_ANALYSIS_IMAGE_LENGTH = 3_000_000;
+const MAX_UPLOAD_FILE_BYTES = 20 * 1024 * 1024;
 
 // OFFLINE FOOD DATABASE FOR SEARCH & AI MATCHICAL LOOKUP
 const FOOD_DATABASE = [
@@ -1251,15 +1253,27 @@ function initAIScanner() {
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > MAX_UPLOAD_FILE_BYTES) {
+        showToast('Photo trop volumineuse. Choisissez une image de moins de 20 Mo.');
+        e.target.value = '';
+        return;
+      }
+      if (file.type && !file.type.startsWith('image/')) {
+        showToast('Choisissez une photo au format image.');
+        e.target.value = '';
+        return;
+      }
       const reader = new FileReader();
       reader.onload = async (evt) => {
         try {
           const squareImage = await cropImageToSquare(evt.target.result);
-          startAIAnalysisProcess(squareImage, null);
+          await startAIAnalysisProcess(squareImage, null);
         } catch (error) {
-          showToast('Impossible de lire cette image. Essayez une autre photo.');
+          console.error('Meal photo could not be prepared:', error);
+          showToast(error.message || 'Impossible de lire cette image. Essayez une photo JPG ou PNG.');
         }
       };
+      reader.onerror = () => showToast('Impossible de lire cette image. Essayez une autre photo.');
       reader.readAsDataURL(file);
     }
     e.target.value = '';
@@ -1272,7 +1286,13 @@ function initAIScanner() {
       return;
     }
 
-    const dataUrl = cropFrameToSquare(video, video.videoWidth, video.videoHeight);
+    let dataUrl;
+    try {
+      dataUrl = cropFrameToSquare(video, video.videoWidth, video.videoHeight);
+    } catch (error) {
+      showToast(error.message);
+      return;
+    }
 
     stopWebcamStream();
     startAIAnalysisProcess(dataUrl, null);
@@ -1304,12 +1324,22 @@ function cropFrameToSquare(source, sourceWidth, sourceHeight) {
   const side = Math.min(sourceWidth, sourceHeight);
   const sourceX = (sourceWidth - side) / 2;
   const sourceY = (sourceHeight - side) / 2;
-  const outputSize = Math.min(side, 1024);
   const canvas = document.createElement('canvas');
-  canvas.width = outputSize;
-  canvas.height = outputSize;
-  canvas.getContext('2d').drawImage(source, sourceX, sourceY, side, side, 0, 0, outputSize, outputSize);
-  return canvas.toDataURL('image/jpeg', 0.9);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Impossible de préparer la photo sur cet appareil.');
+
+  const outputSizes = [...new Set([1024, 896, 768, 640, 512].map(size => Math.min(side, size)))];
+  for (const outputSize of outputSizes) {
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    context.drawImage(source, sourceX, sourceY, side, side, 0, 0, outputSize, outputSize);
+    for (const quality of [0.82, 0.72, 0.62]) {
+      const imageData = canvas.toDataURL('image/jpeg', quality);
+      if (imageData.length <= MAX_ANALYSIS_IMAGE_LENGTH) return imageData;
+    }
+  }
+
+  throw new Error('La photo reste trop volumineuse après compression. Choisissez une image plus petite.');
 }
 
 function cropImageToSquare(imageSrc) {
@@ -1805,7 +1835,17 @@ async function startAIAnalysisProcess(imageSrc, aiResultData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageDataUrl: imageSrc })
       });
-      const result = await res.json();
+      const responseText = await res.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        result = {
+          error: res.status === 413
+            ? 'La photo est trop volumineuse pour être envoyée. Choisissez une photo plus petite.'
+            : `Le service d’analyse a retourné une erreur (HTTP ${res.status}). Réessayez dans quelques instants.`
+        };
+      }
       if (res.ok && result.analysisAvailable && Array.isArray(result.items) && result.items.length > 0) {
         finalAnalysis = result;
       } else {
