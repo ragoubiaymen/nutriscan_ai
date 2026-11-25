@@ -33,8 +33,15 @@ export default function ScannerModal({
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
 
+  // État Clé API
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState('');
+
   useEffect(() => {
     if (isOpen) {
+      const storedKey = localStorage.getItem('nutrivision_gemini_key') || '';
+      setHasApiKey(Boolean(storedKey));
+      setTempApiKey(storedKey);
       setSelectedSlot(targetMealSlot);
       setUserComment(initialComment);
       if (initialImage) {
@@ -51,6 +58,14 @@ export default function ScannerModal({
       setActiveItems([]);
     }
   }, [isOpen, initialImage]);
+
+  const handleSaveInlineKey = () => {
+    const trimmed = tempApiKey.trim();
+    if (trimmed) {
+      localStorage.setItem('nutrivision_gemini_key', trimmed);
+      setHasApiKey(true);
+    }
+  };
 
   // Démarre la caméra mobile/desktop
   const startCamera = async () => {
@@ -333,6 +348,43 @@ export default function ScannerModal({
           {/* STEP 1: CAPTURE & WEBCAM */}
           {step === 'capture' && (
             <div className="space-y-4 max-w-xl mx-auto">
+              
+              {/* Alerte si la clé Gemini n'est pas encore enregistrée */}
+              {!hasApiKey && (
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-300 font-semibold">
+                      <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Clé API Gemini requise pour la reconnaissance visuelle</span>
+                    </div>
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-emerald-400 hover:underline shrink-0"
+                    >
+                      Obtenir en 30s &rarr;
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={tempApiKey}
+                      onChange={(e) => setTempApiKey(e.target.value)}
+                      placeholder="Collez votre clé API Google Gemini ici..."
+                      className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveInlineKey}
+                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition shrink-0"
+                    >
+                      Activer
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="relative rounded-2xl overflow-hidden aspect-square bg-slate-900 border border-white/10 flex items-center justify-center">
                 {cameraActive ? (
                   <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
@@ -406,19 +458,46 @@ export default function ScannerModal({
           {step === 'validation' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-              {/* Cas limites (photo floue ou hors sujet) */}
-              {(!scanResult?.isMeal || scanResult?.edgeCaseWarning) && (
+              {/* Cas limites et filtrage hors contexte */}
+              {!scanResult?.isMeal ? (
+                <div className="lg:col-span-12 p-4 bg-rose-500/15 border border-rose-500/30 rounded-2xl flex items-start gap-3.5 text-rose-200">
+                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-sm text-white">Filtrage Hors Contexte : Aucun aliment détecté</h4>
+                      <span className="text-[10px] font-mono bg-rose-500/30 text-rose-200 px-2 py-0.5 rounded-full font-bold">0 kcal &bull; 0g prot</span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">
+                      {scanResult?.edgeCaseWarning || "L'image ne contient pas de nourriture ou de repas (ex: chambre, objet, environnement non alimentaire)."}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2.5 mt-3">
+                      <button
+                        onClick={() => { setStep('capture'); startCamera(); }}
+                        className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 font-bold text-xs rounded-xl border border-rose-500/40 transition flex items-center gap-1.5"
+                      >
+                        <Camera className="w-3.5 h-3.5" /> Reprendre une photo
+                      </button>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-white/10 transition flex items-center gap-1.5"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-emerald-400" /> Ajouter manuellement des ingrédients CIQUAL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : scanResult?.edgeCaseWarning ? (
                 <div className="lg:col-span-12 p-3 bg-amber-500/15 border border-amber-500/30 rounded-xl flex items-start gap-3 text-amber-200 text-xs">
                   <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <span className="font-bold">Avertissement Cas Limite : </span>
-                    {scanResult?.edgeCaseWarning || "L'image semble floue ou ambiguë."}
+                    <span className="font-bold">Avertissement visuel : </span>
+                    {scanResult.edgeCaseWarning}
                     <span className="block text-[11px] text-amber-300/80 mt-0.5">
                       Vérifiez les portions estimées ou complétez avec le bouton "+ Ajouter un aliment CIQUAL" avant d'enregistrer dans votre journal.
                     </span>
                   </div>
                 </div>
-              )}
+              ) : null}
               
               {/* GAUCHE : PHOTO AVEC REPERES VISUELS & CONSEIL IA */}
               <div className="lg:col-span-5 space-y-4">
@@ -536,77 +615,95 @@ export default function ScannerModal({
                     </button>
                   </div>
 
-                  {activeItems.map((item, idx) => {
-                    const factor = item.grams / 100;
-                    const itemCals = Math.round(item.calories_per_100g * factor);
-                    const isHovered = highlightedIndex === idx;
-
-                    return (
-                      <div
-                        key={idx}
-                        onMouseEnter={() => setHighlightedIndex(idx)}
-                        onMouseLeave={() => setHighlightedIndex(null)}
-                        className={`p-3 rounded-xl border transition ${
-                          isHovered 
-                            ? 'bg-slate-800/90 border-emerald-500/50 shadow-md' 
-                            : 'bg-slate-900/60 border-white/5'
-                        }`}
+                  {activeItems.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-900/60 rounded-2xl border border-white/5 space-y-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto text-2xl">
+                        🍽️
+                      </div>
+                      <h5 className="text-sm font-bold text-white">Aucun composant alimentaire</h5>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                        Cette photo ne contient aucun aliment détecté. Les totaux caloriques restent à 0 kcal. Vous pouvez ajouter des ingrédients manuellement.
+                      </p>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
                       >
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <div className="min-w-0">
-                            <h5 className="text-xs font-bold text-white truncate">{item.name}</h5>
-                            <span className="text-[10px] text-slate-400">
-                              Norme CIQUAL : {item.calories_per_100g} kcal/100g &bull; P:{item.protein_per_100g}g | G:{item.carb_per_100g}g | L:{item.fat_per_100g}g
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono font-extrabold text-emerald-400">{itemCals} kcal</span>
-                            <button
-                              onClick={() => handleDeleteItem(idx)}
-                              className="p-1 text-slate-500 hover:text-red-400 rounded transition"
-                              title="Supprimer cet élément"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
+                        <Plus className="w-3.5 h-3.5" /> Ajouter un aliment CIQUAL
+                      </button>
+                    </div>
+                  ) : (
+                    activeItems.map((item, idx) => {
+                      const factor = item.grams / 100;
+                      const itemCals = Math.round(item.calories_per_100g * factor);
+                      const isHovered = highlightedIndex === idx;
 
-                        {/* Contrôleurs de grammage */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleGramChange(idx, -10)}
-                            className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center shrink-0"
-                          >
-                            -10
-                          </button>
-                          <input
-                            type="range"
-                            min="10"
-                            max="500"
-                            step="5"
-                            value={item.grams}
-                            onChange={(e) => handleGramChange(idx, e.target.value, true)}
-                            className="w-full accent-emerald-400"
-                          />
-                          <button
-                            onClick={() => handleGramChange(idx, 10)}
-                            className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center shrink-0"
-                          >
-                            +10
-                          </button>
-                          <div className="flex items-center gap-1 shrink-0 bg-slate-950 px-2 py-1 rounded-lg border border-white/10">
+                      return (
+                        <div
+                          key={idx}
+                          onMouseEnter={() => setHighlightedIndex(idx)}
+                          onMouseLeave={() => setHighlightedIndex(null)}
+                          className={`p-3 rounded-xl border transition ${
+                            isHovered 
+                              ? 'bg-slate-800/90 border-emerald-500/50 shadow-md' 
+                              : 'bg-slate-900/60 border-white/5'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="min-w-0">
+                              <h5 className="text-xs font-bold text-white truncate">{item.name}</h5>
+                              <span className="text-[10px] text-slate-400">
+                                Norme CIQUAL : {item.calories_per_100g} kcal/100g &bull; P:{item.protein_per_100g}g | G:{item.carb_per_100g}g | L:{item.fat_per_100g}g
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono font-extrabold text-emerald-400">{itemCals} kcal</span>
+                              <button
+                                onClick={() => handleDeleteItem(idx)}
+                                className="p-1 text-slate-500 hover:text-red-400 rounded transition"
+                                title="Supprimer cet élément"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Contrôleurs de grammage */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleGramChange(idx, -10)}
+                              className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center shrink-0"
+                            >
+                              -10
+                            </button>
                             <input
-                              type="number"
+                              type="range"
+                              min="10"
+                              max="500"
+                              step="5"
                               value={item.grams}
                               onChange={(e) => handleGramChange(idx, e.target.value, true)}
-                              className="w-12 bg-transparent text-xs font-mono font-bold text-white text-right focus:outline-none"
+                              className="w-full accent-emerald-400"
                             />
-                            <span className="text-[10px] text-slate-400">g</span>
+                            <button
+                              onClick={() => handleGramChange(idx, 10)}
+                              className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center shrink-0"
+                            >
+                              +10
+                            </button>
+                            <div className="flex items-center gap-1 shrink-0 bg-slate-950 px-2 py-1 rounded-lg border border-white/10">
+                              <input
+                                type="number"
+                                value={item.grams}
+                                onChange={(e) => handleGramChange(idx, e.target.value, true)}
+                                className="w-12 bg-transparent text-xs font-mono font-bold text-white text-right focus:outline-none"
+                              />
+                              <span className="text-[10px] text-slate-400">g</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
 
                 {/* Bouton de validation final */}
@@ -618,11 +715,16 @@ export default function ScannerModal({
                     Reprendre une photo
                   </button>
                   <button
+                    disabled={activeItems.length === 0}
                     onClick={handleSaveToJournal}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-xs py-3 px-6 rounded-xl shadow-lg shadow-emerald-500/25 transition active:scale-95"
+                    className={`flex-1 flex items-center justify-center gap-2 font-bold text-xs py-3 px-6 rounded-xl transition ${
+                      activeItems.length === 0
+                        ? 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-white/5'
+                        : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 shadow-lg shadow-emerald-500/25 active:scale-95'
+                    }`}
                   >
                     <Check className="w-4 h-4" />
-                    Valider & Enregistrer dans le Journal ({totalCals} kcal)
+                    {activeItems.length === 0 ? "Aucun aliment à enregistrer" : `Valider & Enregistrer dans le Journal (${totalCals} kcal)`}
                   </button>
                 </div>
 
