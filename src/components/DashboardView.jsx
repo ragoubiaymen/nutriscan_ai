@@ -74,12 +74,36 @@ export default function DashboardView({
     }
   };
 
-  const handleImageFile = (file) => {
+  const compressImageFile = (file, callback) => {
     const reader = new FileReader();
-    reader.onload = (evt) => {
-      onOpenScanner('lunch', evt.target.result, userCommentText);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 1024;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = (h * maxDim) / w; w = maxDim; }
+          else { w = (w * maxDim) / h; h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.82);
+        callback(compressed);
+      };
+      img.onerror = () => callback(e.target.result);
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImageFile = (file) => {
+    compressImageFile(file, (compressedDataUrl) => {
+      onOpenScanner('lunch', compressedDataUrl, userCommentText);
+    });
   };
 
   const submitWeight = (e) => {

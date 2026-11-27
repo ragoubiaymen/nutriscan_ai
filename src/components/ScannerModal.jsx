@@ -11,10 +11,11 @@ export default function ScannerModal({
   initialComment = '',
   onMealSaved
 }) {
-  const [step, setStep] = useState('capture'); // 'capture' | 'analyzing' | 'validation'
+  const [step, setStep] = useState('capture'); // 'capture' | 'analyzing' | 'validation' | 'error'
   const [selectedSlot, setSelectedSlot] = useState(targetMealSlot);
   const [userComment, setUserComment] = useState(initialComment);
   const [imageSrc, setImageSrc] = useState(null);
+  const [analysisError, setAnalysisError] = useState(null);
   
   // États de l'analyse
   const [analyzingStatus, setAnalyzingStatus] = useState('Détection multi-objets des composants...');
@@ -152,8 +153,9 @@ export default function ScannerModal({
   };
 
   // Lancement du pipeline d'analyse IA
-  const startAnalysis = async (imgData, comment) => {
+  const startAnalysis = async (imgData, comment, overrideKey = null) => {
     setStep('analyzing');
+    setAnalysisError(null);
     setAnalyzingStatus('Détection multi-objets des composants...');
 
     setTimeout(() => {
@@ -165,15 +167,20 @@ export default function ScannerModal({
     }, 1800);
 
     try {
-      const result = await api.scanMeal(imgData, comment);
+      const activeKey = overrideKey !== null ? overrideKey : (tempApiKey?.trim() || localStorage.getItem('nutrivision_gemini_key') || '');
+      if (activeKey && activeKey !== 'demo' && !localStorage.getItem('nutrivision_gemini_key')) {
+        localStorage.setItem('nutrivision_gemini_key', activeKey);
+        setHasApiKey(true);
+      }
+      const result = await api.scanMeal(imgData, comment, activeKey);
       setScanResult(result);
       setInitialAiItems(JSON.parse(JSON.stringify(result.items || [])));
       setActiveItems(result.items || []);
       setStep('validation');
     } catch (err) {
-      alert("Erreur lors de l'analyse : " + err.message);
-      setStep('capture');
-      startCamera();
+      console.error("Erreur lors de l'analyse :", err);
+      setAnalysisError(err.message || "Une erreur est survenue lors de l'analyse visuelle.");
+      setStep('error');
     }
   };
 
@@ -450,6 +457,108 @@ export default function ScannerModal({
                 </div>
                 <h4 className="text-base font-bold text-white font-display">{analyzingStatus}</h4>
                 <p className="text-xs text-slate-400">Application du schéma JSON strict et normalisation aux 100g...</p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: GESTION D'ERREUR & MODE DEMO / CONFIG CLE API */}
+          {step === 'error' && (
+            <div className="py-6 px-2 max-w-xl mx-auto space-y-5">
+              <div className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-200 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-sm text-white font-display">L'analyse du repas n'a pas pu aboutir</h4>
+                    <p className="text-xs text-rose-200/90 mt-1 leading-relaxed">
+                      {analysisError || "Une erreur de communication ou de configuration est survenue."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Configuration directe de la clé API Gemini */}
+                <div className="pt-2 border-t border-rose-500/20 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Clé API Google Gemini requise :
+                    </span>
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:underline text-[11px] font-semibold"
+                    >
+                      Obtenir gratuitement en 30s &rarr;
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={tempApiKey}
+                      onChange={(e) => setTempApiKey(e.target.value)}
+                      placeholder="Collez votre clé API Gemini (AIzaSy...)..."
+                      className="flex-1 bg-slate-900/90 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const trimmed = tempApiKey.trim();
+                        if (trimmed) {
+                          localStorage.setItem('nutrivision_gemini_key', trimmed);
+                          setHasApiKey(true);
+                          startAnalysis(imageSrc, userComment, trimmed);
+                        } else {
+                          alert("Veuillez saisir votre clé API Google Gemini.");
+                        }
+                      }}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-lg shrink-0 flex items-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Activer & Réanalyser
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Aperçu de la photo soumise */}
+              {imageSrc && (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 border border-white/10">
+                  <img src={imageSrc} alt="Repas" className="w-16 h-16 rounded-lg object-cover border border-white/10 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-white truncate">Photo prête pour analyse</p>
+                    <p className="text-[11px] text-slate-400 truncate">
+                      {userComment ? `Précision : "${userComment}"` : "Aucune précision textuelle ajoutée"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Actions de contournement & relance */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => startAnalysis(imageSrc, 'demo', 'demo')}
+                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                  Tester avec le Mode Démo (CIQUAL)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startAnalysis(imageSrc, userComment)}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 text-xs font-semibold transition flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Réessayer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStep('capture'); startCamera(); }}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/10 text-xs font-semibold transition flex items-center justify-center gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Reprendre
+                </button>
               </div>
             </div>
           )}

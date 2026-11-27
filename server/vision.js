@@ -3,6 +3,7 @@ import { matchCiqualFood } from './ciqualData.js';
 const GEMINI_ENDPOINTS = [
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent',
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent'
 ];
 
@@ -21,7 +22,62 @@ export async function analyzeMealImageServer(imageDataUrl, userComment = '', cli
   const mimeType = imageMatch[1];
   const base64Data = imageMatch[2];
 
-  // Si aucune clé Gemini n'est fournie, refuser d'inventer des données statiques
+  // Mode Démo CIQUAL sans clé API pour tests immédiats
+  if (apiKey.toLowerCase() === 'demo' || userComment.toLowerCase() === 'demo') {
+    return {
+      isMeal: true,
+      edgeCaseWarning: null,
+      title: 'Salade Méditerranéenne & Saumon Grillé (Mode Démo)',
+      confidence: 96,
+      nutriScore: 'A',
+      advice: 'Exemple de démonstration CIQUAL : repas riche en Oméga-3 et protéines maigres. Renseignez votre clé API Gemini pour analyser vos photos personnelles.',
+      latencyMs: Date.now() - startTime,
+      source: 'ciqual-demo',
+      items: [
+        {
+          name: 'Pavé de saumon grillé',
+          ciqualCode: 'PO01',
+          ciqualOfficialName: 'Saumon cuit à la vapeur',
+          grams: 140,
+          confidence: 97,
+          caloriesPer100g: 180,
+          proteinPer100g: 22.0,
+          carbPer100g: 0.0,
+          fatPer100g: 10.5,
+          fiberPer100g: 0.0,
+          bbox: { top: 20, left: 15, width: 45, height: 40 }
+        },
+        {
+          name: 'Quinoa cuit',
+          ciqualCode: 'FE02',
+          ciqualOfficialName: 'Quinoa cuit',
+          grams: 150,
+          confidence: 94,
+          caloriesPer100g: 120,
+          proteinPer100g: 4.4,
+          carbPer100g: 21.3,
+          fatPer100g: 1.9,
+          fiberPer100g: 2.8,
+          bbox: { top: 35, left: 50, width: 40, height: 45 }
+        },
+        {
+          name: 'Avocat frais',
+          ciqualCode: 'FR01',
+          ciqualOfficialName: 'Avocat',
+          grams: 80,
+          confidence: 92,
+          caloriesPer100g: 160,
+          proteinPer100g: 2.0,
+          carbPer100g: 1.8,
+          fatPer100g: 14.7,
+          fiberPer100g: 6.7,
+          bbox: { top: 15, left: 55, width: 30, height: 25 }
+        }
+      ]
+    };
+  }
+
+  // Si aucune clé Gemini n'est fournie, avertir clairement l'utilisateur
   if (!apiKey) {
     throw new Error('Clé API Gemini non configurée. Veuillez renseigner votre clé API gratuite Google Gemini dans les Paramètres (⚙️) pour activer la reconnaissance visuelle par IA.');
   }
@@ -95,7 +151,10 @@ Réponds UNIQUEMENT par un objet JSON valide suivant exactement cette structure.
     try {
       const response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
         body: requestBody
       });
 
